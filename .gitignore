@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+
+# Custom
+*.gb
+*.zip
+geemuboi
+!geemuboi/
+.depend
