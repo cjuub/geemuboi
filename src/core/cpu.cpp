@@ -526,16 +526,21 @@ CPU::CPU(MMU& mmu_in) : mmu(mmu_in), instructions(
 	}
 }
 
+uint8_t last_instr;
 int CPU::execute() {
-	// std::cout << instr_text[mmu.read_byte(pc)] << std::hex << " (" << static_cast<unsigned>(mmu.read_byte(pc)) << ")";
-	// std::cout << std::hex << "  pc: " << static_cast<unsigned>(pc);
-	// std::cout << std::hex << "  a: " << static_cast<unsigned>(a);
-	// std::cout << std::hex << "  f: " << static_cast<unsigned>(f);
-	// std::cout << std::hex << "  h: " << static_cast<unsigned>(h);
-	// std::cout << std::hex << "  l: " << static_cast<unsigned>(l);
-	// std::cout << std::endl;
+     //std::cout << instr_text[mmu.read_byte(pc)] << std::hex << " (" << static_cast<unsigned>(mmu.read_byte(pc)) << ")";
+    //std::cout << std::hex << "  pc: " << static_cast<unsigned>(pc);
+    //if (pc == 503) exit(0);
+//	std::cout << std::hex << "  a: " << static_cast<unsigned>(a);
+//	std::cout << std::hex << "  f: " << static_cast<unsigned>(f);
+//	std::cout << std::hex << "  h: " << static_cast<unsigned>(h);
+//	std::cout << std::hex << "  l: " << static_cast<unsigned>(l);
 
-	return instructions[mmu.read_byte(pc++)]();
+    last_instr = mmu.read_byte(pc++);
+    //std::cout << std::hex << "  inst: " << static_cast<unsigned>(last_instr);
+    //std::cout << std::endl;
+    return instructions[last_instr]();
+//	return instructions[mmu.read_byte(pc++)]();
 }
 
 // 0x00
@@ -1647,6 +1652,7 @@ int CPU::jp_nz_a16() {
 		pc = mmu.read_word(pc);
 		return 4;
 	} else {
+        pc += 2;
 		return 3;
 	}
 }
@@ -1704,6 +1710,7 @@ int CPU::jp_z_a16() {
 		pc = mmu.read_word(pc);
 		return 4;
 	} else {
+        pc += 2;
 		return 3;
 	}
 }
@@ -1764,6 +1771,7 @@ int CPU::jp_nc_a16() {
 		pc = mmu.read_word(pc);
 		return 4;
 	} else {
+        pc += 2;
 		return 3;
 	}
 }
@@ -1806,7 +1814,9 @@ int CPU::ret_c() {
 }
 
 int CPU::reti() {
-	// TODO
+	pc = mmu.read_word(sp);
+	sp += 2;
+	// TODO enable interrupts
 	return 4;
 }
 
@@ -1815,6 +1825,7 @@ int CPU::jp_c_a16() {
 		pc = mmu.read_word(pc);
 		return 4;
 	} else {
+        pc += 2;
 		return 3;
 	}
 }
@@ -1984,7 +1995,7 @@ int CPU::rst_38h() {
 }
 //
 int CPU::unimplemented() {
-	std::cout << "Undefined instruction was called" << std::endl;
+	std::cout << "Undefined instruction was called " << std::hex << (unsigned)pc<< std::endl;
 	return 0;
 }
 
