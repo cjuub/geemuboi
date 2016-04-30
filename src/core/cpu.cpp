@@ -530,7 +530,7 @@ uint8_t last_instr;
 int CPU::execute() {
      //std::cout << instr_text[mmu.read_byte(pc)] << std::hex << " (" << static_cast<unsigned>(mmu.read_byte(pc)) << ")";
     //std::cout << std::hex << "  pc: " << static_cast<unsigned>(pc);
-    //if (pc == 503) exit(0);
+    //if (pc == 0x1fe) exit(0);
 //	std::cout << std::hex << "  a: " << static_cast<unsigned>(a);
 //	std::cout << std::hex << "  f: " << static_cast<unsigned>(f);
 //	std::cout << std::hex << "  h: " << static_cast<unsigned>(h);
@@ -1701,6 +1701,11 @@ int CPU::ret_z() {
 
 int CPU::ret() {
 	pc = mmu.read_word(sp);
+    //mmu.write_word(sp, 0xbeef);
+    //printf("%x\n", (unsigned)mmu.read_word(sp));
+    //printf("%x\n", mmu.read_word(sp - 2));
+    //printf("%x\n", mmu.read_word(sp + 2));
+    //exit(0);
 	sp += 2;
 	return 4;
 }
@@ -1817,6 +1822,7 @@ int CPU::reti() {
 	pc = mmu.read_word(sp);
 	sp += 2;
 	// TODO enable interrupts
+    std::cout << "called reti" << std::endl;
 	return 4;
 }
 
@@ -1980,6 +1986,7 @@ int CPU::ld_a_ma16() {
 
 int CPU::ei() {
 	// TODO
+    std::cout << "called ei: " << std::hex << (unsigned)pc << std::endl;
 	return 1;
 }
 //

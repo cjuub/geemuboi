@@ -8,20 +8,22 @@ MMU::MMU(GPU& gpu_in, std::string bios_file, std::string rom_file) : gpu(gpu_in)
 
 	if (!ifs) {
 		std::cout << "Could not open bios file" << std::endl;
-	}
-
-	int byte;
-	for (int i = 0; (byte = ifs.get()) != EOF; i++) {
-		bios[i] = static_cast<uint8_t>(byte);
-	}
+	} else {
+        int byte;
+        for (int i = 0; (byte = ifs.get()) != EOF; i++) {
+            bios[i] = static_cast<uint8_t>(byte);
+        }
+    }
 
 	ifs.close();
 
 	std::ifstream ifs2(rom_file);
 	if (!ifs2) {
 		std::cout << "Could not open rom file" << std::endl;
+            exit(1);
 	}
 
+    int byte;
 	for (int i = 0; (byte = ifs2.get()) != EOF; i++) {
 		rom[i] = static_cast<uint8_t>(byte);
 	}
@@ -63,7 +65,7 @@ uint16_t MMU::read_word(uint16_t addr) {
 	case AREA_OAM: return 0;
 	case AREA_UNUSED: return 0;
 	case AREA_IO: return 0;
-	case AREA_HRAM: return hram[addr & 0x7F];
+	case AREA_HRAM: return hram[addr & 0x7F] + (hram[(addr & 0x7F) + 1] << 8);
 	case AREA_IE_REG: return 0;
 	default: return 0;
 	}
@@ -92,20 +94,29 @@ void MMU::write_byte(uint16_t addr, uint8_t val) {
 }
 
 void MMU::write_word(uint16_t addr, uint16_t val) {
+    
 	switch (get_area(addr)) {
 	case AREA_BIOS: 
 		bios[addr] = val; 
 		bios[addr + 1] = val >> 8; 
 		break;
-	case AREA_ROM0: rom[addr] = val; break;
-	case AREA_ROM1: rom[addr] = val; break;
+	case AREA_ROM0:
+        rom[addr] = val;
+        rom[addr + 1] = val >> 8;
+        break;
+	case AREA_ROM1:
+        rom[addr] = val;
+        break;
 	case AREA_VRAM: gpu.write_word(addr - 0x8000, val); break;
 	case AREA_ERAM: eram[addr & 0x1FFF] = val; break;
 	case AREA_WRAM: wram[addr & 0x1FFF] = val; break;
 	case AREA_OAM: break;
 	case AREA_UNUSED: break;
 	case AREA_IO: break;
-	case AREA_HRAM: hram[addr & 0x7F] = val; break;
+	case AREA_HRAM:
+        hram[addr & 0x7F] = val;
+        hram[(addr + 1) & 0x7F] = val >> 8;
+        break;
 	case AREA_IE_REG: break;
 	}
 }
