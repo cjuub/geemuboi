@@ -36,21 +36,34 @@ uint8_t MMU::read_byte(uint16_t addr) {
 	case AREA_BIOS: return bios[addr];
 	case AREA_ROM0: return rom[addr];
 	case AREA_ROM1: return rom[addr];
-	case AREA_VRAM: return 0;
+	case AREA_VRAM: 
+        std::cout << "Unimplemented read_byte:AREA_WRAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	case AREA_ERAM: return eram[addr & 0x1FFF];
 	case AREA_WRAM: return wram[addr & 0x1FFF];
-	case AREA_OAM: return 0;
-	case AREA_UNUSED: return 0;
+	case AREA_OAM: 
+        std::cout << "Unimplemented read_byte:AREA_OAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
+	case AREA_UNUSED: 
+        std::cout << "Unimplemented read_byte:AREA_UNUSED: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	case AREA_IO:
 		switch (addr) {
-			case GPU_REG_LCD_CONTROL: return gpu.get_lcd_control();
-			case GPU_REG_SCROLL_Y: return gpu.get_scroll_y();
-			case GPU_REG_SCROLL_X: return gpu.get_scroll_x();
-			case GPU_REG_CURR_SCANLINE: return gpu.get_curr_scanline();
+        case GPU_REG_LCD_CONTROL: return gpu.get_lcd_control();
+        case GPU_REG_SCROLL_Y: return gpu.get_scroll_y();
+        case GPU_REG_SCROLL_X: return gpu.get_scroll_x();
+        case GPU_REG_CURR_SCANLINE: return gpu.get_curr_scanline();
+        default: 
+            std::cout << "Unimplemented read_byte:AREA_IO: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+            return 0;
 		}
 	case AREA_HRAM: return hram[addr & 0x7F];
-	case AREA_IE_REG: return 0;
-	default: return 0;
+	case AREA_IE_REG: 
+        std::cout << "Unimplemented read_byte:AREA_IE_REG: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
+	default: 
+        std::cout << "Unimplemented read_byte:INVALID: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	}
 }
 
@@ -59,15 +72,27 @@ uint16_t MMU::read_word(uint16_t addr) {
 	case AREA_BIOS: return bios[addr] + (bios[addr + 1] << 8);
 	case AREA_ROM0: return rom[addr] + (rom[addr + 1] << 8);
 	case AREA_ROM1: return rom[addr] + (rom[addr + 1] << 8);
-	case AREA_VRAM: std::cout << "reading word from vram" << std::endl; return 0;
+	case AREA_VRAM: 
+        std::cout << "Unimplemented read_word:AREA_VRAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	case AREA_ERAM: return eram[addr & 0x2000] + ((eram[addr + 1] & 0x2000) << 8);
 	case AREA_WRAM: return wram[addr & 0x2000] + ((wram[addr + 1] & 0x2000) << 8);
-	case AREA_OAM: return 0;
-	case AREA_UNUSED: return 0;
-	case AREA_IO: return 0;
+	case AREA_OAM: 
+        std::cout << "Unimplemented read_word:AREA_OAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
+	case AREA_UNUSED: 
+        std::cout << "Unimplemented read_word:AREA_UNUSED: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
+	case AREA_IO: 
+        std::cout << "Unimplemented read_word:AREA_IO: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	case AREA_HRAM: return hram[addr & 0x7F] + (hram[(addr & 0x7F) + 1] << 8);
-	case AREA_IE_REG: return 0;
-	default: return 0;
+	case AREA_IE_REG: 
+        std::cout << "Unimplemented read_word:AREA_IE_REG: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
+	default: 
+        std::cout << "Unimplemented read_word:INVALID: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        return 0;
 	}
 }
 
@@ -94,7 +119,6 @@ void MMU::write_byte(uint16_t addr, uint8_t val) {
 }
 
 void MMU::write_word(uint16_t addr, uint16_t val) {
-    
 	switch (get_area(addr)) {
 	case AREA_BIOS: 
 		bios[addr] = val; 
