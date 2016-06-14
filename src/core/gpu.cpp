@@ -8,7 +8,7 @@ GPU::GPU () {
         exit(1);
     }
 
-    SDL_CreateWindowAndRenderer(160 * 3, 144 * 3, 0, &window, &renderer);
+    SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 3, SCREEN_HEIGHT * 3, 0, &window, &renderer);
 
     if( window == NULL )
     {
@@ -63,11 +63,7 @@ void GPU::step(int cpu_cycles) {
 
 void GPU::render_scanline() {
     uint16_t map_addr;
-    if (lcd_control & LCD_CONTROL_BG_TILE_MAP) {
-        map_addr = VRAM_TILE_MAP_1;
-    } else {
-        map_addr = VRAM_TILE_MAP_0;
-    }
+    map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0; 
 
     uint16_t map_offset_y = static_cast<uint8_t>(curr_line + scroll_y) / TILE_HEIGHT_PIXELS;
     map_addr += map_offset_y * TILES_PER_MAP_ROW;
@@ -76,12 +72,7 @@ void GPU::render_scanline() {
     map_addr += map_offset_x;
 
     uint16_t tile_set_addr;
-    if (lcd_control & LCD_CONTROL_BG_TILE_SET) {
-        tile_set_addr = VRAM_TILE_SET_1;
-    } else {
-        tile_set_addr = VRAM_TILE_SET_0;
-    }
-
+    tile_set_addr = (lcd_control & LCD_CONTROL_BG_TILE_SET) ? VRAM_TILE_SET_1 : VRAM_TILE_SET_0;
 
     if (lcd_control & LCD_CONTROL_BG_TILE_SET) {
         // tile_nbr += 256;
@@ -155,3 +146,4 @@ uint8_t GPU::get_curr_scanline() {
 void GPU::set_bg_palette(uint8_t val) {
 
 }
+

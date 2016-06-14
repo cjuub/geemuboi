@@ -66,6 +66,7 @@ private:
     const int TILE_SIZE = 16;
 
     const int SCREEN_WIDTH = 160;
+    const int SCREEN_HEIGHT = 144;
 
     uint8_t vram[0x2000] = {0};
 
