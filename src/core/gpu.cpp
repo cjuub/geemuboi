@@ -104,11 +104,6 @@ void GPU::render_scanline() {
             case 3: SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); break;
         }
 
-        //if (color != 0) {
-            //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        //} else {
-            //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
-        //}
         SDL_RenderDrawPoint(renderer, i, curr_line); 
     }
 }
