@@ -24,14 +24,14 @@ public:
     void set_bg_palette(uint8_t val);
 
 private:
-    enum STATE {
+    enum States {
         STATE_HORIZONTAL_BLANK,
         STATE_VERTICAL_BLANK,
         STATE_SCANLINE_OAM,
         STATE_SCANLINE_VRAM
     };
 
-    enum CYCLES {
+    enum Cycles {
         CYCLES_HORIZONTAL_BLANK = 51,
         CYCLES_VERTICAL_BLANK = 114,
         CYCLES_SCANLINE_OAM = 20,
@@ -46,7 +46,7 @@ private:
         VRAM_TILE_MAP_1 = 0x1C00
     };
 
-    enum LCD_CONTROL {
+    enum LcdControlFlags {
         LCD_CONTROL_BG = 0x1,
         LCD_CONTROL_SPRITE = 0x2,
         LCD_CONTROL_SPRITE_SIZE = 0x4,
@@ -58,6 +58,8 @@ private:
     };
 
     const int LAST_LINE = 143;
+    const int VBLANK_LAST_LINE = 153;
+
     const int TILE_WIDTH_PIXELS = 8;
     const int TILE_HEIGHT_PIXELS = 8;
     const int TILES_PER_MAP_ROW = 32;

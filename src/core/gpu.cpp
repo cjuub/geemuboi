@@ -25,12 +25,7 @@ void GPU::step(int cpu_cycles) {
     switch (curr_state) {
     case STATE_HORIZONTAL_BLANK:
         if (state_cycles >= CYCLES_HORIZONTAL_BLANK) {
-            if (curr_line == LAST_LINE) {
-                curr_state = STATE_VERTICAL_BLANK;
-            } else {
-                curr_state = STATE_SCANLINE_OAM;
-            }
-
+            curr_state = (curr_line == LAST_LINE) ? STATE_VERTICAL_BLANK : STATE_SCANLINE_OAM;
             ++curr_line;
             state_cycles = 0;
         }
@@ -39,13 +34,12 @@ void GPU::step(int cpu_cycles) {
     case STATE_VERTICAL_BLANK:
         if (state_cycles >= CYCLES_VERTICAL_BLANK) {
             ++curr_line;
-                state_cycles = 0;
+            state_cycles = 0;
 
-            if (curr_line > 153) {
+            if (curr_line > VBLANK_LAST_LINE) {
                 curr_line = 0;
                 curr_state = STATE_SCANLINE_OAM;
                 SDL_RenderPresent(renderer);
-                
             }
         }
 
