@@ -35,7 +35,8 @@ private:
         GPU_REG_LCD_CONTROL = 0xFF40,
         GPU_REG_SCROLL_Y = 0xFF42,
         GPU_REG_SCROLL_X = 0xFF43,
-        GPU_REG_CURR_SCANLINE = 0xFF44
+        GPU_REG_CURR_SCANLINE = 0xFF44,
+        GPU_REG_BG_PALETTE = 0xFF47
     };
 
     GPU& gpu;

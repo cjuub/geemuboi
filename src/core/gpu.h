@@ -77,6 +77,7 @@ private:
     uint8_t scroll_y;
     uint8_t scroll_x;
     uint8_t curr_line;
+    uint8_t bg_palette;
 
     SDL_Window* window = NULL;
     SDL_Renderer* renderer;

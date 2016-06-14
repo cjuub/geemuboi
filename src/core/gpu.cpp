@@ -63,7 +63,7 @@ void GPU::step(int cpu_cycles) {
 
 void GPU::render_scanline() {
     uint16_t map_addr;
-    map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0; 
+    map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0;
 
     uint16_t map_offset_y = static_cast<uint8_t>(curr_line + scroll_y) / TILE_HEIGHT_PIXELS;
     map_addr += map_offset_y * TILES_PER_MAP_ROW;
@@ -95,14 +95,21 @@ void GPU::render_scanline() {
         high = (high >> (6 - tile_x)) & 0x2;
 
         uint8_t color = high + low;
+        color = (bg_palette >> (color * 2)) & 0x3;
 
-        if (color != 0) {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        } else {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
+        switch (color) {
+            case 0: SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0); break;
+            case 1: SDL_SetRenderDrawColor(renderer, 192, 192, 192, 0); break;
+            case 2: SDL_SetRenderDrawColor(renderer, 96, 92, 92, 0); break;
+            case 3: SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); break;
         }
 
-        SDL_RenderDrawPoint(renderer, i, curr_line);
+        //if (color != 0) {
+            //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        //} else {
+            //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
+        //}
+        SDL_RenderDrawPoint(renderer, i, curr_line); 
     }
 }
 
@@ -144,6 +151,6 @@ uint8_t GPU::get_curr_scanline() {
 }
 
 void GPU::set_bg_palette(uint8_t val) {
-
+    bg_palette = val;
 }
 

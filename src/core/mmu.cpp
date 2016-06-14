@@ -111,6 +111,7 @@ void MMU::write_byte(uint16_t addr, uint8_t val) {
         case GPU_REG_LCD_CONTROL: gpu.set_lcd_control(val); break;
         case GPU_REG_SCROLL_Y: gpu.set_scroll_y(val); break;
         case GPU_REG_SCROLL_X: gpu.set_scroll_x(val); break;
+        case GPU_REG_BG_PALETTE: gpu.set_bg_palette(val); break;
         }
         break;
     case AREA_HRAM: hram[addr & 0x7F] = val; break;
