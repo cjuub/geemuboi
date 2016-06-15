@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <SDL2/SDL.h>
+#include "../video/renderer.h"
 
 class GPU {
 public:
@@ -38,7 +39,7 @@ private:
         CYCLES_SCANLINE_VRAM = 43
     };
 
-    enum Vram {
+    enum VRAM {
         VRAM_TILE_SET_1 = 0x0000,
         VRAM_TILE_SET_1_2 = 0x0800,
         VRAM_TILE_SET_0 = 0x1000,
@@ -46,7 +47,7 @@ private:
         VRAM_TILE_MAP_1 = 0x1C00
     };
 
-    enum LcdControlFlags {
+    enum LCDControlFlags {
         LCD_CONTROL_BG = 0x1,
         LCD_CONTROL_SPRITE = 0x2,
         LCD_CONTROL_SPRITE_SIZE = 0x4,
@@ -64,9 +65,6 @@ private:
     const int TILE_HEIGHT_PIXELS = 8;
     const int TILES_PER_MAP_ROW = 32;
     const int TILE_SIZE = 16;
-
-    const int SCREEN_WIDTH = 160;
-    const int SCREEN_HEIGHT = 144;
 
     uint8_t vram[0x2000] = {0};
 

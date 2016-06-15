@@ -1,14 +1,13 @@
 #include "gpu.h"
 
-GPU::GPU () {
-
+GPU::GPU() {
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
     {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         exit(1);
     }
 
-    SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 3, SCREEN_HEIGHT * 3, 0, &window, &renderer);
+    SDL_CreateWindowAndRenderer(Renderer::SCREEN_WIDTH * 3, Renderer::SCREEN_HEIGHT * 3, 0, &window, &renderer);
 
     if( window == NULL )
     {
@@ -82,7 +81,7 @@ void GPU::render_scanline() {
     int initial_tile_x = scroll_x & 0x7;
     int tile_y = (curr_line + scroll_y) & 0x7;
     
-    for (int i = 0; i < SCREEN_WIDTH; ++i) {
+    for (int i = 0; i < Renderer::SCREEN_WIDTH; ++i) {
         int tile_x = (initial_tile_x + i) % TILE_WIDTH_PIXELS;
         if (tile_x == 0) {
             tile_nbr = static_cast<int8_t>(vram[map_addr++]);

@@ -1,6 +1,7 @@
 #include "../core/cpu.h"
 #include "../core/mmu.h"
 #include "../core/gpu.h"
+#include "../video/sdl_renderer.h"
 
 #include <iostream>
 #include <fstream>
@@ -9,7 +10,7 @@
 
 #include <SDL2/SDL.h>
 
-const unsigned CYCLES_PER_FRAME = 70224;
+const int CYCLES_PER_FRAME = 70224;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -19,6 +20,8 @@ int main(int argc, char* argv[]) {
 
     std::string bios = argv[1];
     std::string rom = argv[2];
+
+    SDLRenderer rend;
 
     GPU gpu;
     MMU mmu(gpu, bios, rom);
