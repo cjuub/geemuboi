@@ -7,8 +7,12 @@
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <chrono>
+#include <thread>
 
 #include <SDL2/SDL.h>
+
+const int MILLIS_PER_FRAME = 1000 / 60;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -31,6 +35,7 @@ int main(int argc, char* argv[]) {
     bool run = true;
     while (run) {
         int frame_cycles = 0;
+        time_t frame_start_time = time(0);
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
             int cycles = cpu.execute();
             gpu.step(cycles);
@@ -38,6 +43,13 @@ int main(int argc, char* argv[]) {
         }
 
         ++frames;
+
+        double frame_time = difftime(time(0), frame_start_time) * 1000;
+        if (frame_time < MILLIS_PER_FRAME) {
+            int time_to_sleep = static_cast<int>(MILLIS_PER_FRAME - frame_time);
+            std::this_thread::sleep_for(std::chrono::milliseconds(time_to_sleep));
+        }
+
         if (difftime(time(0), start_time) >= 1) {
             start_time = time(0);
             std::cout << std::dec << frames << std::endl;
