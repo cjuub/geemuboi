@@ -1,12 +1,12 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include "mmu.h"
+
 #include <cstdint>
 #include <vector>
 #include <functional>
 #include <string>
-
-#include "mmu.h"
 
 class CPU {
 public:

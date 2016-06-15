@@ -1,14 +1,13 @@
 #ifndef GPU_H
 #define GPU_H
 
-#include <cstdint>
-
-#include <SDL2/SDL.h>
 #include "../video/renderer.h"
+
+#include <cstdint>
 
 class GPU {
 public:
-    GPU();
+    GPU(Renderer& renderer_in);
 
     void step(int cpu_cycles);
     void write_byte(uint16_t addr, uint8_t val);
@@ -24,19 +23,19 @@ public:
     uint8_t get_curr_scanline();
     void set_bg_palette(uint8_t val);
 
+    enum Cycles {
+        CYCLES_HORIZONTAL_BLANK = 51,
+        CYCLES_VERTICAL_BLANK = 114,
+        CYCLES_SCANLINE_OAM = 20,
+        CYCLES_SCANLINE_VRAM = 43,
+        CYCLES_PER_FRAME = 70224
+    };
 private:
     enum States {
         STATE_HORIZONTAL_BLANK,
         STATE_VERTICAL_BLANK,
         STATE_SCANLINE_OAM,
         STATE_SCANLINE_VRAM
-    };
-
-    enum Cycles {
-        CYCLES_HORIZONTAL_BLANK = 51,
-        CYCLES_VERTICAL_BLANK = 114,
-        CYCLES_SCANLINE_OAM = 20,
-        CYCLES_SCANLINE_VRAM = 43
     };
 
     enum VRAM {
@@ -77,8 +76,10 @@ private:
     uint8_t curr_line;
     uint8_t bg_palette;
 
-    SDL_Window* window = NULL;
-    SDL_Renderer* renderer;
+    Renderer& renderer;
+    uint32_t framebuffer[Renderer::SCREEN_WIDTH * Renderer::SCREEN_HEIGHT];
+    //SDL_Window* window = NULL;
+    //SDL_Renderer* renderer;
 };
 
 #endif

@@ -1,22 +1,6 @@
 #include "gpu.h"
 
-GPU::GPU() {
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-    {
-        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-        exit(1);
-    }
-
-    SDL_CreateWindowAndRenderer(Renderer::SCREEN_WIDTH * 3, Renderer::SCREEN_HEIGHT * 3, 0, &window, &renderer);
-
-    if( window == NULL )
-    {
-        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-        exit(1);
-    }
-
-    SDL_RenderSetScale(renderer, 3.0, 3.0);
-}
+GPU::GPU(Renderer& renderer_in) : renderer(renderer_in) {}
 
 void GPU::step(int cpu_cycles) {
     state_cycles += cpu_cycles;
@@ -38,7 +22,8 @@ void GPU::step(int cpu_cycles) {
             if (curr_line > VBLANK_LAST_LINE) {
                 curr_line = 0;
                 curr_state = STATE_SCANLINE_OAM;
-                SDL_RenderPresent(renderer);
+
+                renderer.render_frame(framebuffer);
             }
         }
 
@@ -60,6 +45,7 @@ void GPU::step(int cpu_cycles) {
     }
 }
 
+#include <iostream>
 void GPU::render_scanline() {
     uint16_t map_addr;
     map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0;
@@ -96,14 +82,16 @@ void GPU::render_scanline() {
         uint8_t color = high + low;
         color = (bg_palette >> (color * 2)) & 0x3;
 
+        uint32_t pixel;
+
         switch (color) {
-            case 0: SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0); break;
-            case 1: SDL_SetRenderDrawColor(renderer, 192, 192, 192, 0); break;
-            case 2: SDL_SetRenderDrawColor(renderer, 96, 92, 92, 0); break;
-            case 3: SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); break;
+            case 0: pixel = 0x00FFFFFF; break;
+            case 1: pixel = 0x00C0C0C0; break;
+            case 2: pixel = 0x005C5C5C; break;
+            case 3: pixel = 0x00000000; break; 
         }
 
-        SDL_RenderDrawPoint(renderer, i, curr_line); 
+        framebuffer[i + curr_line * Renderer::SCREEN_WIDTH] = pixel;
     }
 }
 

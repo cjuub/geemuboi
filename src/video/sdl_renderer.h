@@ -5,7 +5,7 @@
 
 #include <SDL2/SDL.h>
 
-class SDLRenderer : Renderer {
+class SDLRenderer : public Renderer {
 public:
     SDLRenderer();
     void render_frame(uint32_t img[]);
@@ -16,3 +16,4 @@ private:
 };
 
 #endif
+

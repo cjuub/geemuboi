@@ -10,8 +10,6 @@
 
 #include <SDL2/SDL.h>
 
-const int CYCLES_PER_FRAME = 70224;
-
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cout << "Invalid arguments." << std::endl;
@@ -22,18 +20,18 @@ int main(int argc, char* argv[]) {
     std::string rom = argv[2];
 
     SDLRenderer rend;
+    SDL_Event event;
 
-    GPU gpu;
+    GPU gpu(rend);
     MMU mmu(gpu, bios, rom);
     CPU cpu(mmu);
-    SDL_Event event;
 
     time_t start_time = time(0);
     unsigned frames = 0;
     bool run = true;
     while (run) {
         int frame_cycles = 0;
-        while (frame_cycles <= CYCLES_PER_FRAME) {
+        while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
             int cycles = cpu.execute();
             gpu.step(cycles);
             frame_cycles += cycles;
@@ -55,3 +53,4 @@ int main(int argc, char* argv[]) {
 
     SDL_Quit();
 }
+

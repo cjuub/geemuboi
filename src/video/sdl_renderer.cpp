@@ -25,3 +25,4 @@ void SDLRenderer::render_frame(uint32_t img[]) {
     SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
+
