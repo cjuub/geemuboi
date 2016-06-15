@@ -17,7 +17,7 @@ public:
 private:
     int get_area(uint16_t addr);
 
-    enum AREA {
+    enum Area {
         AREA_BIOS = 0,
         AREA_ROM0 = 1,
         AREA_ROM1 = 2,
@@ -31,7 +31,7 @@ private:
         AREA_IE_REG = 10
     };
 
-    enum GPU_REG {
+    enum CpuReg {
         GPU_REG_LCD_CONTROL = 0xFF40,
         GPU_REG_SCROLL_Y = 0xFF42,
         GPU_REG_SCROLL_X = 0xFF43,
