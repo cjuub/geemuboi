@@ -22,10 +22,10 @@ MMU::MMU(GPU& gpu_in, Input& input_in, std::string bios_file, std::string rom_fi
     std::ifstream ifs2(rom_file);
     if (!ifs2) {
         std::cout << "Could not open rom file" << std::endl;
-                exit(1);
-        }
+        exit(1);
+    }
 
-        int byte;
+    int byte;
     for (int i = 0; (byte = ifs2.get()) != EOF; i++) {
         rom[i] = static_cast<uint8_t>(byte);
     }
