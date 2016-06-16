@@ -1,6 +1,7 @@
 #include "sdl_renderer.h"
 
 #include <iostream>
+#include <string>
 
 SDLRenderer::SDLRenderer() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -24,5 +25,12 @@ void SDLRenderer::render_frame(uint32_t img[]) {
     SDL_UpdateTexture(framebuffer, NULL, img, SCREEN_WIDTH * sizeof(uint32_t));
     SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
     SDL_RenderPresent(renderer);
+}
+
+void SDLRenderer::update_fps_indicator(int fps) {
+    std::string title("geemuboi (");
+    title += std::to_string(fps);
+    title += ")";
+    SDL_SetWindowTitle(window, title.c_str());
 }
 

@@ -25,17 +25,17 @@ int main(int argc, char* argv[]) {
     std::string bios = argv[1];
     std::string rom = argv[2];
 
-    SDLRenderer rend;
+    SDLRenderer renderer;
     SDL_Event event;
 
-    GPU gpu(rend);
+    GPU gpu(renderer);
     MMU mmu(gpu, bios, rom);
     CPU cpu(mmu);
 
     high_resolution_clock clock;
     auto start_time = clock.now();
 
-    unsigned frames = 0;
+    int frames = 0;
     bool run = true;
     while (run) {
         int frame_cycles = 0;
@@ -46,22 +46,21 @@ int main(int argc, char* argv[]) {
             frame_cycles += cycles;
         }
 
-        ++frames;
-
-        if (duration_cast<milliseconds>(clock.now() - start_time).count() >= 1000) {
-            start_time = clock.now();
-            std::cout << std::dec << frames << std::endl;
-            frames = 0;
-        }
-
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 run = false;
             }
         }
 
-        auto frame_time = duration_cast<milliseconds>(clock.now() - frame_start_time);
+        ++frames;
 
+        if (duration_cast<milliseconds>(clock.now() - start_time).count() >= 1000) {
+            start_time = clock.now();
+            renderer.update_fps_indicator(frames);
+            frames = 0;
+        }
+
+        auto frame_time = duration_cast<milliseconds>(clock.now() - frame_start_time);
         if (frame_time.count() < MILLIS_PER_FRAME) {
             int time_to_sleep = MILLIS_PER_FRAME - frame_time.count();
             std::this_thread::sleep_for(milliseconds(time_to_sleep));
