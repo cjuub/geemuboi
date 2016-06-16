@@ -2,13 +2,14 @@
 #define MMU_H
 
 #include "gpu.h"
+#include "input.h"
 
 #include <cstdint>
 #include <string>
 
 class MMU {
 public:
-    MMU(GPU& gpu, std::string bios_file, std::string rom_file);
+    MMU(GPU& gpu, Input& input_in, std::string bios_file, std::string rom_file);
     
     uint8_t read_byte(uint16_t addr);
     uint16_t read_word(uint16_t addr);
@@ -31,7 +32,11 @@ private:
         AREA_IE_REG = 10
     };
 
-    enum CpuReg {
+    enum {
+        JOYPAD_REG = 0xFF00
+    };
+
+    enum GpuReg {
         GPU_REG_LCD_CONTROL = 0xFF40,
         GPU_REG_SCROLL_Y = 0xFF42,
         GPU_REG_SCROLL_X = 0xFF43,
@@ -40,6 +45,7 @@ private:
     };
 
     GPU& gpu;
+    Input& input;
 
     bool in_bios = true;
 

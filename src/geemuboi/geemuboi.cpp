@@ -1,7 +1,9 @@
 #include "../core/cpu.h"
 #include "../core/mmu.h"
 #include "../core/gpu.h"
+#include "../core/input.h"
 #include "../video/sdl_renderer.h"
+#include "../input/sdl_keyboard.h"
 
 #include <iostream>
 #include <fstream>
@@ -29,8 +31,11 @@ int main(int argc, char* argv[]) {
     SDL_Event event;
 
     GPU gpu(renderer);
-    MMU mmu(gpu, bios, rom);
+    Input input;
+    MMU mmu(gpu, input, bios, rom);
     CPU cpu(mmu);
+
+    SDLKeyboard joypad(input);
 
     high_resolution_clock clock;
     auto start_time = clock.now();
@@ -41,12 +46,14 @@ int main(int argc, char* argv[]) {
         int frame_cycles = 0;
         auto frame_start_time = clock.now();
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
+    //std::cout << std::hex << (unsigned)input.get_buttons_pressed() << std::endl;
             int cycles = cpu.execute();
             gpu.step(cycles);
             frame_cycles += cycles;
         }
 
         while (SDL_PollEvent(&event)) {
+            joypad.update_button_presses();
             if (event.type == SDL_QUIT) {
                 run = false;
             }

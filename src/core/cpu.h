@@ -870,8 +870,8 @@ inline void CPU::sra_r8(uint8_t& r) {
 
 inline void CPU::swap_r8(uint8_t& r) {
     f = 0;
-    uint8_t high = r >> 8;
-    r = (r << 8) + high;
+    uint8_t high = r >> 4;
+    r = (r << 4) + high;
     if (!r) {
         f |= Z_FLAG;
     }

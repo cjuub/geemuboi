@@ -3,7 +3,9 @@
 #include <fstream>
 #include <iostream>
 
-MMU::MMU(GPU& gpu_in, std::string bios_file, std::string rom_file) : gpu(gpu_in) {
+MMU::MMU(GPU& gpu_in, Input& input_in, std::string bios_file, std::string rom_file) : 
+    gpu(gpu_in), input(input_in) {
+
     std::ifstream ifs(bios_file);
 
     if (!ifs) {
@@ -20,10 +22,10 @@ MMU::MMU(GPU& gpu_in, std::string bios_file, std::string rom_file) : gpu(gpu_in)
     std::ifstream ifs2(rom_file);
     if (!ifs2) {
         std::cout << "Could not open rom file" << std::endl;
-            exit(1);
-    }
+                exit(1);
+        }
 
-    int byte;
+        int byte;
     for (int i = 0; (byte = ifs2.get()) != EOF; i++) {
         rom[i] = static_cast<uint8_t>(byte);
     }
@@ -49,6 +51,7 @@ uint8_t MMU::read_byte(uint16_t addr) {
         return 0;
     case AREA_IO:
         switch (addr) {
+        case JOYPAD_REG: return input.get_buttons_pressed();
         case GPU_REG_LCD_CONTROL: return gpu.get_lcd_control();
         case GPU_REG_SCROLL_Y: return gpu.get_scroll_y();
         case GPU_REG_SCROLL_X: return gpu.get_scroll_x();
@@ -108,6 +111,7 @@ void MMU::write_byte(uint16_t addr, uint8_t val) {
     case AREA_UNUSED: break;
     case AREA_IO: 
         switch (addr) {
+        case JOYPAD_REG: input.set_buttons_pressed(val); break;
         case GPU_REG_LCD_CONTROL: gpu.set_lcd_control(val); break;
         case GPU_REG_SCROLL_Y: gpu.set_scroll_y(val); break;
         case GPU_REG_SCROLL_X: gpu.set_scroll_x(val); break;

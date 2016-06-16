@@ -8,7 +8,7 @@ CXXFLAGS += -g
 LDFLAGS =   -g
 LDLIBS = -lSDL2
 
-SRCS = src/core/cpu.cpp src/core/mmu.cpp src/core/gpu.cpp src/geemuboi/geemuboi.cpp src/video/sdl_renderer.cpp
+SRCS = src/core/cpu.cpp src/core/mmu.cpp src/core/gpu.cpp src/core/input.cpp src/geemuboi/geemuboi.cpp src/video/sdl_renderer.cpp src/input/sdl_keyboard.cpp
 OBJS = $(subst .cpp,.o,$(SRCS))
 
 # Targets
