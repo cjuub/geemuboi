@@ -3,7 +3,10 @@
 #include <iostream>
 #include <string>
 
-SDLRenderer::SDLRenderer() {
+SDLRenderer::SDLRenderer() : window{},
+    renderer{},
+    framebuffer{} {
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout << "SDL could not be initialized: " << SDL_GetError() << std::endl;
         exit(1);
@@ -11,7 +14,7 @@ SDLRenderer::SDLRenderer() {
 
     SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 3, SCREEN_HEIGHT * 3, 0, &window, &renderer);
 
-    if(window == NULL) {
+    if (window == NULL) {
         std::cout << "Window could not be created: " << SDL_GetError() << std::endl;
         exit(1);
     }

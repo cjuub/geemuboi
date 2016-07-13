@@ -6,9 +6,7 @@
 #include "../input/sdl_keyboard.h"
 
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <ctime>
 #include <chrono>
 #include <thread>
 
@@ -46,7 +44,6 @@ int main(int argc, char* argv[]) {
         int frame_cycles = 0;
         auto frame_start_time = clock.now();
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
-    //std::cout << std::hex << (unsigned)input.get_buttons_pressed() << std::endl;
             int cycles = cpu.execute();
             gpu.step(cycles);
             frame_cycles += cycles;

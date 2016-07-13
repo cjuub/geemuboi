@@ -1,6 +1,5 @@
 #include "sdl_keyboard.h"
 
-#include <iostream>
 #include <SDL2/SDL.h>
 
 SDLKeyboard::SDLKeyboard(Input& input_in) : input(input_in) {}
