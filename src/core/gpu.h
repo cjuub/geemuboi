@@ -14,6 +14,7 @@ public:
     void write_word(uint16_t addr, uint16_t val);
     void render_scanline();
 
+    // TODO read_register(addr) instead of getters and move reg constants to here
     uint8_t get_lcd_control();
     void set_lcd_control(uint8_t val);
     uint8_t get_scroll_x();
@@ -57,16 +58,16 @@ private:
         LCD_CONTROL_DISPLAY = 0x80
     };
 
-    const int LAST_LINE = 143;
-    const int VBLANK_LAST_LINE = 153;
+    static const int LAST_LINE = 143;
+    static const int VBLANK_LAST_LINE = 153;
 
-    const int TILE_WIDTH_PIXELS = 8;
-    const int TILE_HEIGHT_PIXELS = 8;
-    const int TILES_PER_MAP_ROW = 32;
-    const int TILE_SIZE = 16;
+    static const int TILE_WIDTH_PIXELS = 8;
+    static const int TILE_HEIGHT_PIXELS = 8;
+    static const int TILES_PER_MAP_ROW = 32;
+    static const int TILE_SIZE = 16;
 
-    uint8_t vram[0x2000] = {0};
-    uint8_t oams[0xA0] = {0};
+    uint8_t vram[0x2000];
+    uint8_t oams[0xA0];
 
     int curr_state;
     int state_cycles;

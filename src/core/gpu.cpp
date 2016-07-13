@@ -1,6 +1,17 @@
 #include "gpu.h"
 
-GPU::GPU(Renderer& renderer_in) : renderer(renderer_in) {}
+GPU::GPU(Renderer& renderer_in) : vram{},
+    oams{},
+    curr_state{},
+    state_cycles{},
+    lcd_control{},
+    scroll_y{},
+    scroll_x{},
+    curr_line{},
+    bg_palette{},
+    renderer(renderer_in),
+    framebuffer{}
+{}
 
 void GPU::step(int cpu_cycles) {
     state_cycles += cpu_cycles;
@@ -81,13 +92,12 @@ void GPU::render_scanline() {
         uint8_t color = high + low;
         color = (bg_palette >> (color * 2)) & 0x3;
 
-        uint32_t pixel;
-
+        uint32_t pixel = 0;
         switch (color) {
             case 0: pixel = 0x00FFFFFF; break;
             case 1: pixel = 0x00C0C0C0; break;
             case 2: pixel = 0x005C5C5C; break;
-            case 3: pixel = 0x00000000; break; 
+            case 3: pixel = 0x00000000; break;
         }
 
         framebuffer[i + curr_line * Renderer::SCREEN_WIDTH] = pixel;
