@@ -5,9 +5,11 @@
 
 class Input {
 public:
-    uint8_t get_buttons_pressed();
+    Input();
+
+    uint8_t get_buttons_pressed() const;
     void set_buttons_pressed(uint8_t buttons_pressed);
-    bool get_column_down(int column);
+    bool get_column_down(int column) const;
 
     enum Buttons {
         BUTTON_A = 0xE,
@@ -21,7 +23,7 @@ public:
     };
 
 private:
-    uint8_t buttons_pressed = 0x0F;
+    uint8_t buttons_pressed;
     bool column_down[2];
 };
 

@@ -3,9 +3,17 @@
 #include <fstream>
 #include <iostream>
 
-MMU::MMU(GPU& gpu_in, Input& input_in, std::string bios_file, std::string rom_file) : 
-    gpu(gpu_in), input(input_in) {
+MMU::MMU(GPU& gpu_in, Input& input_in, const std::string& bios_file, const std::string& rom_file) : 
+    gpu(gpu_in), 
+    input(input_in),
+    in_bios{true},
+    bios{},
+    rom{},
+    eram{},
+    wram{},
+    hram{} {
 
+    // TODO helper function for reading files
     std::ifstream ifs(bios_file);
 
     if (!ifs) {

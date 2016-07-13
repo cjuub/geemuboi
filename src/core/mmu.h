@@ -9,7 +9,7 @@
 
 class MMU {
 public:
-    MMU(GPU& gpu, Input& input_in, std::string bios_file, std::string rom_file);
+    MMU(GPU& gpu, Input& input_in, const std::string& bios_file, const std::string& rom_file);
     
     uint8_t read_byte(uint16_t addr);
     uint16_t read_word(uint16_t addr);
@@ -19,24 +19,24 @@ private:
     int get_area(uint16_t addr);
 
     enum Area {
-        AREA_BIOS = 0,
-        AREA_ROM0 = 1,
-        AREA_ROM1 = 2,
-        AREA_VRAM = 3,
-        AREA_ERAM = 4,
-        AREA_WRAM = 5,
-        AREA_OAM = 6,
-        AREA_UNUSED = 7,
-        AREA_IO = 8,
-        AREA_HRAM = 9,
-        AREA_IE_REG = 10
+        AREA_BIOS,
+        AREA_ROM0,
+        AREA_ROM1,
+        AREA_VRAM,
+        AREA_ERAM,
+        AREA_WRAM,
+        AREA_OAM,
+        AREA_UNUSED,
+        AREA_IO,
+        AREA_HRAM,
+        AREA_IE_REG
     };
 
-    enum {
+    enum JoypadRegs {
         JOYPAD_REG = 0xFF00
     };
 
-    enum GpuReg {
+    enum GPURegs {
         GPU_REG_LCD_CONTROL = 0xFF40,
         GPU_REG_SCROLL_Y = 0xFF42,
         GPU_REG_SCROLL_X = 0xFF43,
@@ -47,13 +47,13 @@ private:
     GPU& gpu;
     Input& input;
 
-    bool in_bios = true;
+    bool in_bios;
 
-    uint8_t bios[0x100] = {0};
-    uint8_t rom[0x4000] = {0};
-    uint8_t eram[0x2000] = {0};
-    uint8_t wram[0x2000] = {0};
-    uint8_t hram[0x7F] = {0};
+    uint8_t bios[0x100];
+    uint8_t rom[0x4000];
+    uint8_t eram[0x2000];
+    uint8_t wram[0x2000];
+    uint8_t hram[0x7F];
 };
 
 #endif

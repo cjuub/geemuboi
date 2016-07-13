@@ -1,6 +1,10 @@
 #include "input.h"
 
-uint8_t Input::get_buttons_pressed() {
+Input::Input() : buttons_pressed{0x0F}, 
+    column_down{}
+{}
+
+uint8_t Input::get_buttons_pressed() const {
     return buttons_pressed;
 }
 
@@ -14,7 +18,7 @@ void Input::set_buttons_pressed(uint8_t buttons_pressed) {
     this->buttons_pressed = buttons_pressed;
 }
 
-bool Input::get_column_down(int column) {
+bool Input::get_column_down(int column) const {
     return column_down[column];
 }
 
