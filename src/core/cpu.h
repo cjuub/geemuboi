@@ -583,13 +583,13 @@ private:
 
     int unimplemented();
 
-    const int Z_FLAG = 0x80;
-    const int N_FLAG = 0x40;
-    const int H_FLAG = 0x20;
-    const int C_FLAG = 0x10;
+    static const int Z_FLAG = 0x80;
+    static const int N_FLAG = 0x40;
+    static const int H_FLAG = 0x20;
+    static const int C_FLAG = 0x10;
 
     MMU& mmu;
-    std::vector<std::function<int()>> instructions;
+    const std::vector<std::function<int()>> instructions;
     
     uint8_t a;
     uint8_t b;

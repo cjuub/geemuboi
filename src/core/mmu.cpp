@@ -43,9 +43,7 @@ uint8_t MMU::read_byte(uint16_t addr) {
         return 0;
     case AREA_ERAM: return eram[addr & 0x1FFF];
     case AREA_WRAM: return wram[addr & 0x1FFF];
-    case AREA_OAM: 
-        std::cout << "Unimplemented read_byte:AREA_OAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
-        return 0;
+    //case AREA_OAM: return gpu.read_oam(addr & 0x1FFF);
     case AREA_UNUSED: 
         std::cout << "Unimplemented read_byte:AREA_UNUSED: " << std::hex << static_cast<unsigned>(addr) << std::endl;
         return 0;

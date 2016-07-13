@@ -45,7 +45,6 @@ void GPU::step(int cpu_cycles) {
     }
 }
 
-#include <iostream>
 void GPU::render_scanline() {
     uint16_t map_addr;
     map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0;

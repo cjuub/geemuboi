@@ -3,7 +3,8 @@
 #include <iostream>
 #include <fstream>
 
-CPU::CPU(MMU& mmu_in) : mmu(mmu_in), instructions(
+CPU::CPU(MMU& mmu_in) : mmu(mmu_in), 
+    instructions(
     {
         std::bind(&CPU::nop, this),
         std::bind(&CPU::ld_bc_d16, this),
@@ -517,7 +518,20 @@ CPU::CPU(MMU& mmu_in) : mmu(mmu_in), instructions(
         std::bind(&CPU::set_7_l, this),
         std::bind(&CPU::set_7_mhl, this),
         std::bind(&CPU::set_7_a, this)
-    }) {
+    }),
+    a(0),
+    b(0),
+    c(0),
+    d(0),
+    e(0),
+    h(0),
+    l(0),
+    f(0),
+    pc(0),
+    sp(0),
+    cycles(0),
+    instr_text()
+{
     std::ifstream ifs("instr.txt");
 
     std::string str;

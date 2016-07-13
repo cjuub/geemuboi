@@ -66,6 +66,7 @@ private:
     const int TILE_SIZE = 16;
 
     uint8_t vram[0x2000] = {0};
+    uint8_t oams[0xA0] = {0};
 
     int curr_state;
     int state_cycles;
@@ -78,8 +79,6 @@ private:
 
     Renderer& renderer;
     uint32_t framebuffer[Renderer::SCREEN_WIDTH * Renderer::SCREEN_HEIGHT];
-    //SDL_Window* window = NULL;
-    //SDL_Renderer* renderer;
 };
 
 #endif
