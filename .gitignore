@@ -31,5 +31,6 @@
 *.gb
 *.zip
 geemuboi
+geemuboi-dbg
 !geemuboi/
 .depend

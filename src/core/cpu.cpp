@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 CPU::CPU(MMU& mmu_in) : mmu(mmu_in), 
     instructions{
@@ -554,6 +556,56 @@ int CPU::execute() {
     //std::cout << std::endl;
     return instructions[last_instr]();
 //  return instructions[mmu.read_byte(pc++)]();
+}
+
+std::string CPU::print_context() const {
+    std::stringstream ss;
+
+    ss << std::hex << std::setfill('0');
+
+    ss << "A: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(a) << " ";
+    ss << "F: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(f) << " ";
+    ss << "PC: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(pc) << std::endl;
+
+    ss << "B: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(b) << " ";
+    ss << "C: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(c) << " ";
+    ss << "SP: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(sp) << std::endl;
+
+    ss << "D: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(d) << " ";
+    ss << "E: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(e) << std::endl;
+
+    ss << "H: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(h) << " ";
+    ss << "L: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(l) << std::endl;
+
+    return ss.str();
+}
+
+std::string CPU::print_stack(int before, int after) const {
+    std::stringstream ss;
+    ss << std::hex;
+    before = (sp + before < 0) ? -sp : before;
+    after = (sp + after > 0xFFFF) ? 0xFFFF - sp : after;
+    for (int i = before; i != after; ++i) {
+        ss << ((i == 0) ? ">" : " ");
+        ss << "0x" << static_cast<unsigned>(sp + i * 2) << ": ";
+        ss << "0x" << static_cast<unsigned>(mmu.read_word(sp + i * 2)) << std::endl;
+    }
+
+    return ss.str();
+}
+
+std::string CPU::print_curr_instr(int before, int after) const {
+    std::stringstream ss;
+    ss << std::hex;
+    before = (pc + before < 0) ? -pc : before;
+    after = (pc + after > 0xFFFF) ? 0xFFFF - pc : after;
+    for (int i = before; i != after; ++i) {
+        ss << ((i == 0) ? ">" : " ");
+        ss << "0x" << static_cast<unsigned>(pc + i) << ": ";
+        ss << instr_text[mmu.read_byte(pc + i)] << std::endl;
+    }
+
+    return ss.str();
 }
 
 // 0x00

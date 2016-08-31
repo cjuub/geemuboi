@@ -4,6 +4,7 @@
 #include "../core/input.h"
 #include "../video/sdl_renderer.h"
 #include "../input/sdl_keyboard.h"
+#include "../debug/logger.h"
 
 #include <iostream>
 #include <string>
@@ -32,6 +33,8 @@ int main(int argc, char* argv[]) {
     Input input;
     MMU mmu(gpu, input, bios, rom);
     CPU cpu(mmu);
+
+    LOG_INIT(cpu, mmu, gpu);
 
     SDLKeyboard joypad(input);
 

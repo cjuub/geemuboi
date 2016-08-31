@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include "mmu.h"
+#include "../debug/logger.h"
 
 #include <cstdint>
 #include <vector>
@@ -13,6 +14,9 @@ public:
     CPU(MMU& mmu_in);
 
     int execute();
+    std::string print_context() const;
+    std::string print_stack(int before, int after) const;
+    std::string print_curr_instr(int before, int after) const;
 private:
     // Generalized CPU functionality
     void dec_r8(uint8_t& r);
