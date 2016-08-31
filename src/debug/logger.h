@@ -4,9 +4,11 @@
 #define LOGGER_H
 
 #include "../core/cpu.h"
+#include <cstdio>
 
 #define LOG_INIT(a, b, c) Logger::init(a, b, c)
-#define LOG() Logger::get_instance().log_all()
+#define LOG(...) printf(__VA_ARGS__)
+#define LOG_ALL() Logger::get_instance().log_all()
 #define LOG_CPU_REGS() Logger::get_instance().log_cpu_regs()
 #define LOG_CURR_STACK(a, b) Logger::get_instance().log_curr_stack(a, b) 
 #define LOG_CURR_INSTR(a, b) Logger::get_instance().log_curr_instr(a, b) 
@@ -33,7 +35,8 @@ private:
 
 #else
 #define LOG_INIT(a, b, c) (void) 0
-#define LOG() (void) 0
+#define LOG(...) (void) 0
+#define LOG_ALL() (void) 0
 #define LOG_CPU_REGS() (void) 0
 #define LOG_CURR_STACK(a, b) (void) 0
 #define LOG_CURR_INSTR(a, b) (void) 0
