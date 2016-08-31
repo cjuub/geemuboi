@@ -1,5 +1,7 @@
 #include "mmu.h"
 
+#include "../debug/logger.h"
+
 #include <fstream>
 #include <iostream>
 
@@ -47,13 +49,13 @@ uint8_t MMU::read_byte(uint16_t addr) {
     case AREA_ROM0: return rom[addr];
     case AREA_ROM1: return rom[addr];
     case AREA_VRAM: 
-        std::cout << "Unimplemented read_byte:AREA_WRAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_byte:AREA_WRAM: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_ERAM: return eram[addr & 0x1FFF];
     case AREA_WRAM: return wram[addr & 0x1FFF];
     //case AREA_OAM: return gpu.read_oam(addr & 0x1FFF);
     case AREA_UNUSED: 
-        std::cout << "Unimplemented read_byte:AREA_UNUSED: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_byte:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_IO:
         switch (addr) {
@@ -63,15 +65,15 @@ uint8_t MMU::read_byte(uint16_t addr) {
         case GPU_REG_SCROLL_X: return gpu.get_scroll_x();
         case GPU_REG_CURR_SCANLINE: return gpu.get_curr_scanline();
         default: 
-            std::cout << "Unimplemented read_byte:AREA_IO: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+            LOG("Unimplemented read_byte:AREA_IO: %x\n", static_cast<unsigned>(addr));
             return 0;
         }
     case AREA_HRAM: return hram[addr & 0x7F];
     case AREA_IE_REG: 
-        std::cout << "Unimplemented read_byte:AREA_IE_REG: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_byte:AREA_IE_REG: %x\n", static_cast<unsigned>(addr));
         return 0;
     default: 
-        std::cout << "Unimplemented read_byte:INVALID: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_byte:INVALID: %x\n", static_cast<unsigned>(addr));
         return 0;
     }
 }
@@ -82,25 +84,25 @@ uint16_t MMU::read_word(uint16_t addr) {
     case AREA_ROM0: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_ROM1: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_VRAM: 
-        std::cout << "Unimplemented read_word:AREA_VRAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:AREA_WRAM: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_ERAM: return eram[addr & 0x2000] + ((eram[addr + 1] & 0x2000) << 8);
     case AREA_WRAM: return wram[addr & 0x2000] + ((wram[addr + 1] & 0x2000) << 8);
     case AREA_OAM: 
-        std::cout << "Unimplemented read_word:AREA_OAM: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:AREA_OAM: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_UNUSED: 
-        std::cout << "Unimplemented read_word:AREA_UNUSED: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_IO: 
-        std::cout << "Unimplemented read_word:AREA_IO: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:AREA_IO: %x\n", static_cast<unsigned>(addr));
         return 0;
     case AREA_HRAM: return hram[addr & 0x7F] + (hram[(addr & 0x7F) + 1] << 8);
     case AREA_IE_REG: 
-        std::cout << "Unimplemented read_word:AREA_IE_REG: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:AREA_IE_REG: %x\n", static_cast<unsigned>(addr));
         return 0;
     default: 
-        std::cout << "Unimplemented read_word:INVALID: " << std::hex << static_cast<unsigned>(addr) << std::endl;
+        LOG("Unimplemented read_word:INVALID: %x\n", static_cast<unsigned>(addr));
         return 0;
     }
 }
@@ -160,7 +162,7 @@ int MMU::get_area(uint16_t addr) {
     if (addr < 0x4000) {
         if (in_bios && addr == 0x100) {
             in_bios = false;
-            std::cout << "Exit bios" << std::endl;
+            LOG("Exit BIOS\n");
             // exit(0);
         }
         if (addr < 0x100 && in_bios) {
