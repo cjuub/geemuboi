@@ -1,43 +1,56 @@
 CXX = g++
-CC  = g++
 
-CPPFLAGS =  -std=c++11
-CXXFLAGS =  -O2 -Wall -Wextra -pedantic-errors -Wold-style-cast 
+CXXFLAGS = -O2 -Wall -Wextra -pedantic-errors -Wold-style-cast
 CXXFLAGS += -std=c++11
-CXXFLAGS += -g
-LDFLAGS =   -g
+LDFLAGS = -g
 LDLIBS = -lSDL2
 
-SRCS = src/core/cpu.cpp src/core/mmu.cpp src/core/gpu.cpp src/core/input.cpp src/geemuboi/geemuboi.cpp src/video/sdl_renderer.cpp src/input/sdl_keyboard.cpp
-SRCSDBG = $(SRCS) src/debug/logger.cpp
+SRCDIR = src
 
-OBJS = $(subst .cpp,.o,$(SRCS))
-OBJSDBG = $(subst .cpp,.o,$(SRCSDBG))
+SRCS := $(wildcard $(SRCDIR)/*/*.cpp)
+SRCS := $(filter-out src/debug/%.cpp, $(SRCS))
+SRCSDBG := $(SRCS) $(wildcard $(SRCDIR)/debug/*.cpp)
 
-# Targets
+OBJS := $(subst .cpp,.o,$(SRCS))
+OBJSDBG := $(subst .cpp,.o,$(SRCSDBG))
+
 PROGS = geemuboi geemuboi-dbg
+
+DEPDIR := .d
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+$(shell mkdir -p $(DEPDIR)/src/core/ >/dev/null)
+$(shell mkdir -p $(DEPDIR)/src/geemuboi/ >/dev/null)
+$(shell mkdir -p $(DEPDIR)/src/video/ >/dev/null)
+$(shell mkdir -p $(DEPDIR)/src/debug/ >/dev/null)
+$(shell mkdir -p $(DEPDIR)/src/input/ >/dev/null)
+
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+
+COMPILE.cpp = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c
+POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 all: $(PROGS)
 
-geemuboi-dbg: CXXFLAGS += -DDEBUG
-# Targets rely on implicit rules for compiling and linking
 geemuboi: $(OBJS)
-		$(CXX) $(LDFLAGS) -o geemuboi $(OBJS) $(LDLIBS) 
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o geemuboi $(OBJS) $(LDLIBS)
 
+geemuboi-dbg: CXXFLAGS += -DDEBUG
 geemuboi-dbg: $(OBJSDBG)
-		$(CXX) $(LDFLAGS) -o geemuboi-dbg $(OBJSDBG) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o geemuboi-dbg $(OBJSDBG) $(LDLIBS)
 
-# Phony targets
-.PHONY: all clean
-
-# Standard clean
 clean:
 	rm -f src/*/*.o $(PROGS)
+	rm -rf .d
 
-depend: .depend
+# replace built in rule with added dependency support
+%.o: %.cpp
+%.o: %.cpp $(DEPDIR)/*/*.d
+		$(COMPILE.cpp) $(OUTPUT_OPTION) $<
+		@$(POSTCOMPILE)
 
-.depend: $(SRCS)
-	rm -f ./.depend
-	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+.PHONY: all clean
 
-include .depend
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
+
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
