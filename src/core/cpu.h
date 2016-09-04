@@ -17,6 +17,9 @@ public:
     std::string print_context() const;
     std::string print_stack(int before, int after) const;
     std::string print_curr_instr(int before, int after) const;
+    void pause();
+    void resume();
+    bool is_paused() const;
 private:
     // Generalized CPU functionality
     void dec_r8(uint8_t& r);
@@ -610,6 +613,8 @@ private:
     unsigned int cycles;
 
     std::vector<std::string> instr_text;
+
+    bool paused;
 };
 
 inline void CPU::dec_r8(uint8_t& r) {

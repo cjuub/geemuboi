@@ -5,11 +5,13 @@
 #include "../video/sdl_renderer.h"
 #include "../input/sdl_keyboard.h"
 #include "../debug/logger.h"
+#include "argument_handler.h"
 
 #include <iostream>
 #include <string>
 #include <chrono>
 #include <thread>
+#include <unordered_set>
 
 #include <SDL2/SDL.h>
 
@@ -18,23 +20,17 @@ const double MILLIS_PER_FRAME = 1000 / 60;
 int main(int argc, char* argv[]) {
     using namespace std::chrono;
 
-    if (argc != 3) {
-        std::cout << "Invalid arguments." << std::endl;
-        exit(0);
-    }
-
-    std::string bios = argv[1];
-    std::string rom = argv[2];
+    ArgumentHandler args(argc - 1, argv + 1);
 
     SDLRenderer renderer;
     SDL_Event event;
 
     GPU gpu(renderer);
     Input input;
-    MMU mmu(gpu, input, bios, rom);
+    MMU mmu(gpu, input, args.get_bios(), args.get_rom());
     CPU cpu(mmu);
 
-    LOG_INIT(cpu, mmu, gpu);
+    LOG_INIT(cpu, mmu, gpu, args.get_breakpoints());
 
     SDLKeyboard joypad(input);
 
@@ -48,6 +44,16 @@ int main(int argc, char* argv[]) {
         auto frame_start_time = clock.now();
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
             int cycles = cpu.execute();
+
+            if (cycles < 0) {
+                while (!SDL_PollEvent(&event)) {
+                    std::this_thread::sleep_for(milliseconds(1000));
+                }
+
+                cpu.resume();
+                continue;
+            }
+
             gpu.step(cycles);
             frame_cycles += cycles;
         }

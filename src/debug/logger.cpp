@@ -4,14 +4,22 @@
 
 using namespace std;
 
-Logger::Logger(const CPU& cpu_in, const MMU& mmu_in, const GPU& gpu_in) : 
+Logger::Logger(CPU& cpu_in,
+               const MMU& mmu_in, 
+               const GPU& gpu_in,
+               unordered_set<uint16_t>& breakpoints_in) : 
     cpu(cpu_in),
     mmu(mmu_in),
-    gpu(gpu_in)
+    gpu(gpu_in),
+    breakpoints(breakpoints_in),
+    prev_addr(0xFFFF)
 {}
 
-Logger& Logger::init(const CPU& cpu_in, const MMU& mmu_in, const GPU& gpu_in) {
-    static Logger logger(cpu_in, mmu_in, gpu_in);
+Logger& Logger::init(CPU& cpu_in, 
+                     const MMU& mmu_in, 
+                     const GPU& gpu_in,
+                     unordered_set<uint16_t>& breakpoints_in) {
+    static Logger logger(cpu_in, mmu_in, gpu_in, breakpoints_in);
     return logger;
 }
 
@@ -19,8 +27,9 @@ Logger& Logger::get_instance() {
     CPU* cpu = nullptr;
     MMU* mmu = nullptr;
     GPU* gpu = nullptr;
+    unordered_set<uint16_t>* breakpoints = nullptr;
 
-    return Logger::init(*cpu, *mmu, *gpu);
+    return Logger::init(*cpu, *mmu, *gpu, *breakpoints);
 }
 
 void Logger::log_all() const {
@@ -42,5 +51,15 @@ void Logger::log_curr_stack(int before, int after) const {
 void Logger::log_curr_instr(int before, int after) const {
     cout << "------- INSTR -------" << endl;
     cout << cpu.print_curr_instr(before, after);
+}
+
+void Logger::log_breakpoint(uint16_t addr) {
+    if (prev_addr != addr && breakpoints.find(addr) != breakpoints.end()) {
+        cout << "------- BREAK -------" << endl;
+        log_all();
+        cpu.pause();
+    }
+
+    prev_addr = addr;
 }
 

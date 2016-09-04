@@ -530,7 +530,8 @@ CPU::CPU(MMU& mmu_in) : mmu(mmu_in),
     pc{},
     sp{},
     cycles{},
-    instr_text{}
+    instr_text{},
+    paused(false)
 {
     std::ifstream ifs("instr.txt");
 
@@ -541,6 +542,12 @@ CPU::CPU(MMU& mmu_in) : mmu(mmu_in),
 }
 
 int CPU::execute() {
+    LOG_BREAKPOINT(pc);
+
+    if (is_paused()) {
+        return -1;
+    }
+
     return instructions[mmu.read_byte(pc++)]();
 }
 
@@ -592,6 +599,18 @@ std::string CPU::print_curr_instr(int before, int after) const {
     }
 
     return ss.str();
+}
+
+void CPU::pause() {
+    paused = true;
+}
+
+void CPU::resume() {
+    paused = false;
+}
+
+bool CPU::is_paused() const {
+    return paused;
 }
 
 // 0x00
