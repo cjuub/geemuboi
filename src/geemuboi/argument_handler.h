@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_set>
 #include <memory>
+#include <sstream>
 
 class ArgumentHandler {
     friend class Command;
@@ -45,7 +46,12 @@ private:
             Command(ah), 
             bps(bps_in) {}
         virtual void execute() { 
-            argument_handler.breakpoints.insert(static_cast<uint16_t>(std::stoi(bps)));
+            std::istringstream iss(bps);
+            std::string breakpoint;
+            while (std::getline(iss, breakpoint, ',')) {
+                uint16_t bp = static_cast<uint16_t>(std::stoul(breakpoint, nullptr, 16));
+                argument_handler.breakpoints.insert(bp);
+            }
         }
     private:
         const std::string bps;

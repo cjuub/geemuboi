@@ -44,16 +44,6 @@ int main(int argc, char* argv[]) {
         auto frame_start_time = clock.now();
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
             int cycles = cpu.execute();
-
-            if (cycles < 0) {
-                while (!SDL_PollEvent(&event)) {
-                    std::this_thread::sleep_for(milliseconds(1000));
-                }
-
-                cpu.resume();
-                continue;
-            }
-
             gpu.step(cycles);
             frame_cycles += cycles;
         }

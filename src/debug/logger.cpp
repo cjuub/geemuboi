@@ -54,12 +54,11 @@ void Logger::log_curr_instr(int before, int after) const {
 }
 
 void Logger::log_breakpoint(uint16_t addr) {
-    if (prev_addr != addr && breakpoints.find(addr) != breakpoints.end()) {
+    if (breakpoints.find(addr) != breakpoints.end()) {
         cout << "------- BREAK -------" << endl;
         log_all();
-        cpu.pause();
+        cout << "Press enter to continue..." << endl;
+        cin.get();
     }
-
-    prev_addr = addr;
 }
 
