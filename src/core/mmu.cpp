@@ -53,7 +53,8 @@ uint8_t MMU::read_byte(uint16_t addr) {
         return 0;
     case AREA_ERAM: return eram[addr & 0x1FFF];
     case AREA_WRAM: return wram[addr & 0x1FFF];
-    //case AREA_OAM: return gpu.read_oam(addr & 0x1FFF);
+    case AREA_OAM:
+        return gpu.read_byte_oam(addr - 0xFE00);
     case AREA_UNUSED: 
         LOG("Unimplemented read_byte:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
         return 0;
@@ -64,6 +65,8 @@ uint8_t MMU::read_byte(uint16_t addr) {
         case GPU_REG_SCROLL_Y: return gpu.get_scroll_y();
         case GPU_REG_SCROLL_X: return gpu.get_scroll_x();
         case GPU_REG_CURR_SCANLINE: return gpu.get_curr_scanline();
+        case GPU_REG_OBJ_PALETTE_0: return gpu.get_obj_palette(0);
+        case GPU_REG_OBJ_PALETTE_1: return gpu.get_obj_palette(1);
         default: 
             LOG("Unimplemented read_byte:AREA_IO: %x\n", static_cast<unsigned>(addr));
             return 0;
@@ -89,8 +92,9 @@ uint16_t MMU::read_word(uint16_t addr) {
     case AREA_ERAM: return eram[addr & 0x2000] + ((eram[addr + 1] & 0x2000) << 8);
     case AREA_WRAM: return wram[addr & 0x2000] + ((wram[addr + 1] & 0x2000) << 8);
     case AREA_OAM: 
-        LOG("Unimplemented read_word:AREA_OAM: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        return (gpu.read_byte_oam(addr - 0xFE00 + 1) << 8) + gpu.read_byte_oam(addr - 0xFE00);
+        //LOG("Unimplemented read_word:AREA_OAM: %x\n", static_cast<unsigned>(addr));
+        //return 0;
     case AREA_UNUSED: 
         LOG("Unimplemented read_word:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
         return 0;
@@ -112,18 +116,20 @@ void MMU::write_byte(uint16_t addr, uint8_t val) {
     case AREA_BIOS: bios[addr] = val; break;
     case AREA_ROM0: rom[addr] = val; break;
     case AREA_ROM1: rom[addr] = val; break;
-    case AREA_VRAM: gpu.write_byte(addr - 0x8000, val); break;
+    case AREA_VRAM: gpu.write_byte_vram(addr - 0x8000, val); break;
     case AREA_ERAM: eram[addr & 0x1FFF] = val; break;
     case AREA_WRAM: wram[addr & 0x1FFF] = val; break;
-    case AREA_OAM: break;
+    case AREA_OAM: gpu.write_byte_oam(addr - 0xFE00, val); break;
     case AREA_UNUSED: break;
     case AREA_IO: 
         switch (addr) {
-        case JOYPAD_REG: input.set_buttons_pressed(val); break;
+        case JOYPAD_REG: input.set_buttons_pressed_switch(val); break;
         case GPU_REG_LCD_CONTROL: gpu.set_lcd_control(val); break;
         case GPU_REG_SCROLL_Y: gpu.set_scroll_y(val); break;
         case GPU_REG_SCROLL_X: gpu.set_scroll_x(val); break;
         case GPU_REG_BG_PALETTE: gpu.set_bg_palette(val); break;
+        case GPU_REG_OBJ_PALETTE_0: gpu.set_obj_palette(0, val); break;
+        case GPU_REG_OBJ_PALETTE_1: gpu.set_obj_palette(1, val); break;
         }
         break;
     case AREA_HRAM: hram[addr & 0x7F] = val; break;
@@ -144,7 +150,7 @@ void MMU::write_word(uint16_t addr, uint16_t val) {
     case AREA_ROM1:
         rom[addr] = val;
         break;
-    case AREA_VRAM: gpu.write_word(addr - 0x8000, val); break;
+    case AREA_VRAM: gpu.write_word_vram(addr - 0x8000, val); break;
     case AREA_ERAM: eram[addr & 0x1FFF] = val; break;
     case AREA_WRAM: wram[addr & 0x1FFF] = val; break;
     case AREA_OAM: break;
@@ -163,7 +169,6 @@ int MMU::get_area(uint16_t addr) {
         if (in_bios && addr == 0x100) {
             in_bios = false;
             LOG("Exit BIOS\n");
-            // exit(0);
         }
         if (addr < 0x100 && in_bios) {
             return AREA_BIOS;

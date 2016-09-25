@@ -8,7 +8,8 @@ public:
     Input();
 
     uint8_t get_buttons_pressed() const;
-    void set_buttons_pressed(uint8_t buttons_pressed);
+    void set_buttons_pressed_switch(uint8_t buttons_pressed);
+    void set_buttons_pressed(int column, uint8_t buttons_pressed);
     bool get_column_down(int column) const;
 
     enum Buttons {
@@ -23,7 +24,7 @@ public:
     };
 
 private:
-    uint8_t buttons_pressed;
+    uint8_t buttons_pressed[2];
     bool column_down[2];
 };
 
