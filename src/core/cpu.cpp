@@ -1941,14 +1941,18 @@ int CPU::rst_20h() {
 }
 
 int CPU::add_sp_r8() {
-    // CHECK
-    f &= 0x30;
-    sp += static_cast<int8_t>(mmu.read_byte(pc++));
+    f = 0;
+    int8_t val = static_cast<int8_t>(mmu.read_byte(pc++));
 
-    // TODO flags
-    LOG("WARNING: Called unimplemented function add_sp_r8()\n");
-    LOG_ALL();
+    if ((sp & 0xFF) + val > 0xFF) {
+        f |= C_FLAG; 
+    }
 
+    if ((sp & 0xF) + (val & 0xF) > 0xF) {
+        f |= H_FLAG;
+    }
+
+    sp += val;
     return 4;
 }
 
@@ -2017,14 +2021,21 @@ int CPU::rst_30h() {
 }
 
 int CPU::ldhl_sp_r8() {
-    // CHECK
-    f &= 0x30;
-    uint16_t val = sp + static_cast<int8_t>(mmu.read_byte(pc++));
-    h = val >> 8;
-    l = static_cast<uint8_t>(val);
+    f = 0;
+    int8_t val = static_cast<int8_t>(mmu.read_byte(pc++));
+
+    if ((sp & 0xFF) + val > 0xFF) {
+        f |= C_FLAG;
+    }
+
+    if ((sp & 0xF) + (val & 0xF) > 0xF) {
+        f |= H_FLAG;
+    }
+
+    h = (sp + val) >> 8;
+    l = static_cast<uint8_t>(sp + val);
     return 3;
 }
-
 int CPU::ld_sp_hl() {
     sp = (h << 8) + l;
     return 2;
