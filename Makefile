@@ -4,17 +4,21 @@ CXXFLAGS = -O2 -Wall -Wextra -pedantic-errors -Wold-style-cast
 CXXFLAGS += -std=c++11
 LDFLAGS = -g
 LDLIBS = -lSDL2
+TESTLIBS = -lgtest -lgtest_main -lpthread
 
 SRCDIR = src
+TESTDIR = test
 
 SRCS := $(wildcard $(SRCDIR)/*/*.cpp)
 SRCS := $(filter-out src/debug/%.cpp, $(SRCS))
 SRCSDBG := $(SRCS) $(wildcard $(SRCDIR)/debug/*.cpp)
+SRCSTEST := $(wildcard $(TESTDIR)/*/*.cpp)
 
 OBJS := $(subst .cpp,.o,$(SRCS))
 OBJSDBG := $(subst .cpp,.o,$(SRCSDBG))
+OBJSTEST := $(subst .cpp,.o,$(SRCSTEST))
 
-PROGS = geemuboi geemuboi-dbg
+PROGS = geemuboi geemuboi-dbg geemuboi-test
 
 DEPDIR := .d
 $(shell mkdir -p $(DEPDIR) >/dev/null)
@@ -38,8 +42,13 @@ geemuboi-dbg: CXXFLAGS += -DDEBUG
 geemuboi-dbg: $(OBJSDBG)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o geemuboi-dbg $(OBJSDBG) $(LDLIBS)
 
+geemuboi-test: $(OBJSTEST)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o geemuboi-test $(OBJSTEST) $(TESTLIBS)
+
 clean:
-	rm -f src/*/*.o $(PROGS)
+	rm -f $(PROGS)
+	rm -f src/*/*.o
+	rm -f test/*/*.o
 	rm -rf .d
 
 # replace built in rule with added dependency support
