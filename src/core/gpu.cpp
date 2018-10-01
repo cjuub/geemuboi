@@ -1,7 +1,9 @@
 #include "gpu.h"
 
+#include "../debug/logger.h"
+
 GPU::GPU(Renderer& renderer_in) : vram{},
-    oams{},
+    oam{},
     curr_state{},
     state_cycles{},
     lcd_control{},
@@ -57,6 +59,16 @@ void GPU::step(int cpu_cycles) {
 }
 
 void GPU::render_scanline() {
+    if (lcd_control & LCD_CONTROL_BG_ENABLE) {
+        render_background();
+    }
+
+    if (lcd_control & LCD_CONTROL_SPRITE_ENABLE) {
+        render_sprites();
+    }
+}
+
+void GPU::render_background() {
     uint16_t map_addr;
     map_addr = (lcd_control & LCD_CONTROL_BG_TILE_MAP) ? VRAM_TILE_MAP_1 : VRAM_TILE_MAP_0;
 
@@ -94,23 +106,94 @@ void GPU::render_scanline() {
 
         uint32_t pixel = 0;
         switch (color) {
-            case 0: pixel = 0x00FFFFFF; break;
-            case 1: pixel = 0x00C0C0C0; break;
-            case 2: pixel = 0x005C5C5C; break;
-            case 3: pixel = 0x00000000; break;
+            case 0: pixel = PIXEL_COLOR_WHITE; break;
+            case 1: pixel = PIXEL_COLOR_LIGHT_GREY; break;
+            case 2: pixel = PIXEL_COLOR_DARK_GREY; break;
+            case 3: pixel = PIXEL_COLOR_BLACK; break;
         }
 
         framebuffer[i + curr_line * Renderer::SCREEN_WIDTH] = pixel;
     }
 }
 
-void GPU::write_byte(uint16_t addr, uint8_t val) {
+void GPU::render_sprites() {
+    // for each sprite
+    for (int i = 0; i != NBR_OAMS * OAM_SIZE; i += OAM_SIZE) {
+        OamEntry sprite = {oam[i], oam[i + 1], oam[i + 2], oam[i + 3]};
+        // if this sprite is on current line
+        if (sprite.y - 16 <= curr_line && sprite.y - 16 + TILE_HEIGHT_PIXELS > curr_line) {
+            uint8_t palette = (sprite.flags & 0x10) ? obj_palette[1] : obj_palette[0];
+            int priority = sprite.flags & 0x80;
+
+            int tile_y = (curr_line + scroll_y) & 0x7;
+            uint16_t tile_set_addr;
+            tile_set_addr = (lcd_control & LCD_CONTROL_BG_TILE_SET) ? VRAM_TILE_SET_1 : VRAM_TILE_SET_0;
+
+            // TODO PRINT TILE SEE IF CORRECT
+
+            //LOG("pal= ");
+
+            for (int x = 0; x != TILE_WIDTH_PIXELS; ++x) {
+                //uint8_t low = vram[tile_set_addr + TILE_SIZE * sprite.tile_nbr + tile_y * 2 + x * 2];
+                //uint8_t high = vram[tile_set_addr + TILE_SIZE * sprite.tile_nbr + tile_y * 2 +x*2+1];
+
+                // (nbr * (tile_rows * byte_per_row)) + (
+
+                // VIEW VRAM, CHECK WITH OTHER EMU
+
+                uint8_t low = vram[3 * 8 * 2 + 2 + x * 2];
+                uint8_t high = vram[3 * 8 * 2 + 2 + x * 2 + 1];
+
+                low = (low >> (7 - x)) & 0x1;
+                high = (high >> (6 - x)) & 0x2;
+
+                uint8_t color = high + low;
+                color = (palette >> (color * 2)) & 0x3;
+
+                //LOG("%d ", color);
+
+                uint32_t pixel = 0;
+                switch (color) {
+                    case 0: pixel = PIXEL_COLOR_WHITE; break;
+                    case 1: pixel = PIXEL_COLOR_LIGHT_GREY; break;
+                    case 2: pixel = PIXEL_COLOR_DARK_GREY; break;
+                    case 3: pixel = PIXEL_COLOR_BLACK; break;
+                }
+
+                framebuffer[sprite.x - 8 + x + curr_line * Renderer::SCREEN_WIDTH] = pixel;
+            }
+
+            //LOG("\n");
+        }
+    }
+}
+
+void GPU::write_byte_vram(uint16_t addr, uint8_t val) {
     vram[addr] = val;
 }
 
-void GPU::write_word(uint16_t addr, uint16_t val) {
+void GPU::write_word_vram(uint16_t addr, uint16_t val) {
     vram[addr] = val;
     vram[addr + 1] = val >> 8;
+}
+
+uint8_t GPU::read_byte_oam(uint16_t addr) const {
+    return oam[addr];
+}
+
+void GPU::write_byte_oam(uint16_t addr, uint8_t val) {
+    LOG("addr=%d val=%d\n", addr, val);
+    //exit(0);
+    oam[addr] = val;
+}
+
+uint16_t GPU::read_word_oam(uint16_t addr) const {
+    return oam[addr] + (oam[addr + 1] << 8);
+}
+
+void GPU::write_word_oam(uint16_t addr, uint16_t val) {
+    oam[addr] = val;
+    oam[addr + 1] = val >> 8;
 }
 
 uint8_t GPU::get_lcd_control() {
@@ -137,11 +220,22 @@ void GPU::set_scroll_y(uint8_t val) {
     scroll_y = val;
 }
 
+
+
+
 uint8_t GPU::get_curr_scanline() {
     return curr_line;
 }
 
 void GPU::set_bg_palette(uint8_t val) {
     bg_palette = val;
+}
+
+uint8_t GPU::get_obj_palette(int index) {
+    return obj_palette[index];
+}
+
+void GPU::set_obj_palette(int index, uint8_t val) {
+    obj_palette[index] = val;
 }
 
