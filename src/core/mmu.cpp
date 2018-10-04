@@ -1,6 +1,6 @@
 #include "mmu.h"
 
-#include "../debug/logger.h"
+#include "../utils/logger.h"
 
 #include <fstream>
 #include <iostream>

@@ -2,9 +2,9 @@
 #include "../core/mmu.h"
 #include "../core/gpu.h"
 #include "../core/input.h"
-#include "../video/sdl_renderer.h"
+#include "../view/sdl_renderer.h"
 #include "../input/sdl_keyboard.h"
-#include "../debug/logger.h"
+#include "../utils/logger.h"
 #include "argument_handler.h"
 
 #include <iostream>

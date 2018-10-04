@@ -1,4 +1,4 @@
-#ifdef DEBUG
+// #ifdef DEBUG
 
 #ifndef LOGGER_H
 #define LOGGER_H
@@ -48,13 +48,13 @@ private:
 
 #endif
 
-#else
-#define LOG_INIT(a, b, c, d) (void) 0
-#define LOG(...) (void) 0
-#define LOG_ALL() (void) 0
-#define LOG_CPU_REGS() (void) 0
-#define LOG_CURR_STACK(a, b) (void) 0
-#define LOG_CURR_INSTR(a, b) (void) 0
-#define LOG_BREAKPOINT(a) (void) 0
-#endif
+// #else
+// #define LOG_INIT(a, b, c, d) (void) 0
+// #define LOG(...) (void) 0
+// #define LOG_ALL() (void) 0
+// #define LOG_CPU_REGS() (void) 0
+// #define LOG_CURR_STACK(a, b) (void) 0
+// #define LOG_CURR_INSTR(a, b) (void) 0
+// #define LOG_BREAKPOINT(a) (void) 0
+// #endif
 

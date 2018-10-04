@@ -1,6 +1,6 @@
 #include "gpu.h"
 
-#include "../debug/logger.h"
+#include "../utils/logger.h"
 
 GPU::GPU(Renderer& renderer_in) : vram{},
     oam{},

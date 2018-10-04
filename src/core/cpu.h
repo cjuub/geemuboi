@@ -2,7 +2,7 @@
 #define CPU_H
 
 #include "mmu.h"
-#include "../debug/logger.h"
+#include "../utils/logger.h"
 
 #include <cstdint>
 #include <vector>
