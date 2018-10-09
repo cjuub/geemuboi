@@ -1,3 +1,5 @@
+#ifndef NDEBUG
+
 #include "logger.h"
 
 #include <iostream>
@@ -62,3 +64,4 @@ void Logger::log_breakpoint(uint16_t addr) {
     }
 }
 
+#endif

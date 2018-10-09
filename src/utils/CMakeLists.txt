@@ -11,4 +11,3 @@ target_compile_options(geemuboi_utils
         -pedantic-errors
         -Wold-style-cast
 )
-
