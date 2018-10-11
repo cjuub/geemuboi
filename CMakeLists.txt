@@ -11,3 +11,8 @@ add_subdirectory(src/core)
 add_subdirectory(src/input)
 add_subdirectory(src/utils)
 add_subdirectory(src/view)
+
+add_subdirectory(test/core)
+add_subdirectory(test/input)
+add_subdirectory(test/utils)
+add_subdirectory(test/view)

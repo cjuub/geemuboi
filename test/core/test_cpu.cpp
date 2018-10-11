@@ -4,13 +4,9 @@
 
 class CpuTest : public ::testing::Test {
 protected:
-    CpuTest() : cpu(mmu) {}
-
-    CPU cpu;
+    CpuTest() {}
 };
 
 TEST_F(CpuTest, Nop) {
-    int cycles = cpu.execute(0x00);
-    
     EXPECT_EQ(1, 1);
 }
