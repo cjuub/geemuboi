@@ -1,7 +1,5 @@
 project(test_geemuboi_view)
 
-find_package(GTest REQUIRED)
-
 add_executable(test_geemuboi_view
     test_view.cpp
 )
@@ -9,8 +7,8 @@ add_executable(test_geemuboi_view
 target_link_libraries(test_geemuboi_view
     PRIVATE
         geemuboi_view
-        GTest::GTest
-        GTest::Main
+        gtest
+        gtest_main
 )
 
 target_compile_options(test_geemuboi_view 
@@ -20,3 +18,6 @@ target_compile_options(test_geemuboi_view
         -pedantic-errors
         -Wold-style-cast
 )
+
+include(GoogleTest)
+gtest_discover_tests(test_geemuboi_view)

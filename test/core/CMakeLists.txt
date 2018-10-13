@@ -1,7 +1,5 @@
 project(test_geemuboi_core)
 
-find_package(GTest REQUIRED)
-
 add_executable(test_geemuboi_core
     test_cpu.cpp
 )
@@ -9,8 +7,8 @@ add_executable(test_geemuboi_core
 target_link_libraries(test_geemuboi_core
     PRIVATE
         geemuboi_core
-        GTest::GTest
-        GTest::Main
+        gtest
+        gtest_main
 )
 
 target_compile_options(test_geemuboi_core 
@@ -20,3 +18,6 @@ target_compile_options(test_geemuboi_core
         -pedantic-errors
         -Wold-style-cast
 )
+
+include(GoogleTest)
+gtest_discover_tests(test_geemuboi_core)

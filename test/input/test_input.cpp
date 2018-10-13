@@ -1,3 +1,3 @@
 #include <gtest/gtest.h>
 
-class CpuTest : public ::testing::Test {};
+class InputTest : public ::testing::Test {};
