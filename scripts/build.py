@@ -36,4 +36,4 @@ for target, target_dir, cmake_flag in [(args.debug, debug_dir, cmake_debug_flag)
     if not (target_dir / 'CMakeCache.txt').exists():
         call(['cmake', proj_dir.resolve(), cmake_flag], cwd=target_dir)
 
-    call(['make'], cwd=target_dir)
+    call(['make', '-j'], cwd=target_dir)
