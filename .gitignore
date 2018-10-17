@@ -32,6 +32,6 @@
 *.zip
 geemuboi
 geemuboi-dbg
-!geemuboi/
-.d
 build
+roms
+docs
