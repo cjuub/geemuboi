@@ -5,7 +5,6 @@
 #include "../view/sdl_renderer.h"
 #include "../input/sdl_keyboard.h"
 #include "../utils/logger.h"
-#include "argument_handler.h"
 
 #include <iostream>
 #include <string>
@@ -14,23 +13,61 @@
 #include <unordered_set>
 
 #include <SDL2/SDL.h>
+#include <args.hxx>
 
 const double MILLIS_PER_FRAME = 1000 / 60;
 
 int main(int argc, char* argv[]) {
     using namespace std::chrono;
 
-    ArgumentHandler args(argc - 1, argv + 1);
+    args::ArgumentParser parser("This is a test program.", "This goes after the options.");
+    args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
+    args::Positional<std::string> bios(parser, "BIOS", "The GameBoy BIOS ROM.");
+    args::Positional<std::string> rom(parser, "ROM", "A GameBoy ROM.");
+    args::ValueFlagList<std::string> breakpoints(parser, "breakpoint", "A breakpoint address.", {"b"});
+
+    try {
+        parser.ParseCLI(argc, argv);
+    } catch (args::Help&) {
+        std::cout << parser;
+        return 0;
+    } catch (args::ParseError& e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    } catch (const args::ValidationError& e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    }
+
+    if (!bios) {
+        std::cout << "Missing BIOS argument" << std::endl;
+        return 1;
+    }
+
+    if (!rom) {
+        std::cout << "Missing ROM argument" << std::endl;
+        return 1;
+    }
+
+    std::unordered_set<uint16_t> bps;
+    if (breakpoints) {
+        for (const auto& breakpoint : args::get(breakpoints)) {
+            uint16_t bp = static_cast<uint16_t>(std::stoul(breakpoint, nullptr, 16));
+            bps.insert(bp);
+        }
+    }
 
     SDLRenderer renderer;
     SDL_Event event;
 
     GPU gpu(renderer);
     Input input;
-    MMU mmu(gpu, input, args.get_bios(), args.get_rom());
+    MMU mmu(gpu, input, args::get(bios), args::get(rom)); 
     CPU cpu(mmu);
 
-    LOG_INIT(cpu, mmu, gpu, args.get_breakpoints());
+    LOG_INIT(cpu, mmu, gpu, bps);
 
     SDLKeyboard joypad(input);
 
@@ -72,4 +109,3 @@ int main(int argc, char* argv[]) {
 
     SDL_Quit();
 }
-
