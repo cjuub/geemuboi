@@ -3,7 +3,7 @@
 
 #ifndef NDEBUG
 #include "core/cpu.h"
-#include "core/mmu.h"
+#include "core/immu.h"
 #include "core/gpu.h"
 
 #include <cstdio>
@@ -22,7 +22,7 @@ class CPU;
 class Logger {
 public:
     static Logger& init(CPU& cpu_in, 
-                        const MMU& mmu_in,
+                        const IMmu& mmu_in,
                         const GPU& gpu_in,
                         std::unordered_set<uint16_t>& breakpoints_in);
     static Logger& get_instance();
@@ -34,12 +34,12 @@ public:
     void log_breakpoint(uint16_t addr);
 private:
     Logger(CPU& cpu_in,
-           const MMU& mmu_in,
+           const IMmu& mmu_in,
            const GPU& gpu_in,
            std::unordered_set<uint16_t>& breakpoints_in);
 
     CPU& cpu;
-    const MMU& mmu;
+    const IMmu& mmu;
     const GPU& gpu;
     std::unordered_set<uint16_t>& breakpoints;
     uint16_t prev_addr;

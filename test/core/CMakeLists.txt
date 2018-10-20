@@ -7,8 +7,10 @@ add_executable(test_geemuboi_core
 target_link_libraries(test_geemuboi_core
     PRIVATE
         geemuboi_core
+        geemuboi_utils
         gtest
         gtest_main
+        gmock
 )
 
 target_compile_options(test_geemuboi_core 

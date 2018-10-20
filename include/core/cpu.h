@@ -1,7 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include "core/mmu.h"
+#include "core/immu.h"
 #include "utils/logger.h"
 
 #include <cstdint>
@@ -11,7 +11,7 @@
 
 class CPU {
 public:
-    CPU(MMU& mmu_in);
+    CPU(IMmu& mmu_in);
 
     int execute();
     std::string print_context() const;
@@ -592,7 +592,7 @@ private:
     static const int H_FLAG = 0x20;
     static const int C_FLAG = 0x10;
 
-    MMU& mmu;
+    IMmu& mmu;
     const std::vector<std::function<int()>> instructions;
     
     uint8_t a;

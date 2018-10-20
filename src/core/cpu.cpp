@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-CPU::CPU(MMU& mmu_in) : mmu(mmu_in), 
+CPU::CPU(IMmu& mmu_in) : mmu(mmu_in), 
     instructions{
         std::bind(&CPU::nop, this),
         std::bind(&CPU::ld_bc_d16, this),

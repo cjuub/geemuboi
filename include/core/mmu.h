@@ -1,20 +1,21 @@
 #ifndef MMU_H
 #define MMU_H
 
-#include "gpu.h"
-#include "input.h"
+#include "core/gpu.h"
+#include "core/input.h"
+#include "core/immu.h"
 
 #include <cstdint>
 #include <string>
 
-class MMU {
+class MMU : public IMmu {
 public:
     MMU(GPU& gpu, Input& input_in, const std::string& bios_file, const std::string& rom_file);
     
-    uint8_t read_byte(uint16_t addr);
-    uint16_t read_word(uint16_t addr);
-    void write_byte(uint16_t addr, uint8_t val);
-    void write_word(uint16_t addr, uint16_t val);
+    virtual uint8_t read_byte(uint16_t addr);
+    virtual uint16_t read_word(uint16_t addr);
+    virtual void write_byte(uint16_t addr, uint8_t val);
+    virtual void write_word(uint16_t addr, uint16_t val);
 private:
     int get_area(uint16_t addr);
 

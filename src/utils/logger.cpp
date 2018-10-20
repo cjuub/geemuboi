@@ -7,7 +7,7 @@
 using namespace std;
 
 Logger::Logger(CPU& cpu_in,
-               const MMU& mmu_in, 
+               const IMmu& mmu_in, 
                const GPU& gpu_in,
                unordered_set<uint16_t>& breakpoints_in) : 
     cpu(cpu_in),
@@ -18,7 +18,7 @@ Logger::Logger(CPU& cpu_in,
 {}
 
 Logger& Logger::init(CPU& cpu_in, 
-                     const MMU& mmu_in, 
+                     const IMmu& mmu_in, 
                      const GPU& gpu_in,
                      unordered_set<uint16_t>& breakpoints_in) {
     static Logger logger(cpu_in, mmu_in, gpu_in, breakpoints_in);
@@ -27,7 +27,7 @@ Logger& Logger::init(CPU& cpu_in,
 
 Logger& Logger::get_instance() {
     CPU* cpu = nullptr;
-    MMU* mmu = nullptr;
+    IMmu* mmu = nullptr;
     GPU* gpu = nullptr;
     unordered_set<uint16_t>* breakpoints = nullptr;
 
