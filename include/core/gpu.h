@@ -1,7 +1,7 @@
 #ifndef GPU_H
 #define GPU_H
 
-#include "../view/renderer.h"
+#include "view/renderer.h"
 
 #include <cstdint>
 

@@ -1,4 +1,4 @@
-#include "sdl_keyboard.h"
+#include "input/sdl_keyboard.h"
 
 #include <SDL2/SDL.h>
 

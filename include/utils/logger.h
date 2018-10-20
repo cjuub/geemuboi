@@ -2,9 +2,9 @@
 #define LOGGER_H
 
 #ifndef NDEBUG
-#include "../core/cpu.h"
-#include "../core/mmu.h"
-#include "../core/gpu.h"
+#include "core/cpu.h"
+#include "core/mmu.h"
+#include "core/gpu.h"
 
 #include <cstdio>
 #include <unordered_set>

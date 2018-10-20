@@ -18,3 +18,8 @@ target_compile_options(geemuboi_input
         -pedantic-errors
         -Wold-style-cast
 )
+
+target_include_directories(geemuboi_input
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+)

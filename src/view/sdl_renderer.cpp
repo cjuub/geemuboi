@@ -1,4 +1,4 @@
-#include "sdl_renderer.h"
+#include "view/sdl_renderer.h"
 
 #include <iostream>
 #include <string>
@@ -36,4 +36,3 @@ void SDLRenderer::update_fps_indicator(int fps) {
     title += ")";
     SDL_SetWindowTitle(window, title.c_str());
 }
-

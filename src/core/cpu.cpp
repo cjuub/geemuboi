@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "core/cpu.h"
 
 #include <fstream>
 #include <sstream>

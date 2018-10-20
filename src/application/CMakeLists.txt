@@ -12,7 +12,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/Taywee/args
 )
 
-Fetchcontent_GetProperties(args)
+FetchContent_GetProperties(args)
 if(NOT args_POPULATED)
   FetchContent_Populate(args)
   add_subdirectory(${args_SOURCE_DIR} ${args_BINARY_DIR})

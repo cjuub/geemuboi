@@ -1,8 +1,8 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include "mmu.h"
-#include "../utils/logger.h"
+#include "core/mmu.h"
+#include "utils/logger.h"
 
 #include <cstdint>
 #include <vector>

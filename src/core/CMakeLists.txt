@@ -14,3 +14,10 @@ target_compile_options(geemuboi_core
         -pedantic-errors
         -Wold-style-cast
 )
+
+message("${CMAKE_SOURCE_DIR}/include")
+
+target_include_directories(geemuboi_core
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+)

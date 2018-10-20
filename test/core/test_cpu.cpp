@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../src/core/cpu.h"
+#include "core/cpu.h"
 
 class CpuTest : public ::testing::Test {
 protected:

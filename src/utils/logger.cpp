@@ -1,6 +1,6 @@
 #ifndef NDEBUG
 
-#include "logger.h"
+#include "utils/logger.h"
 
 #include <iostream>
 

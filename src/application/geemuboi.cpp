@@ -1,10 +1,10 @@
-#include "../core/cpu.h"
-#include "../core/mmu.h"
-#include "../core/gpu.h"
-#include "../core/input.h"
-#include "../view/sdl_renderer.h"
-#include "../input/sdl_keyboard.h"
-#include "../utils/logger.h"
+#include "core/cpu.h"
+#include "core/mmu.h"
+#include "core/gpu.h"
+#include "core/input.h"
+#include "view/sdl_renderer.h"
+#include "input/sdl_keyboard.h"
+#include "utils/logger.h"
 
 #include <iostream>
 #include <string>
