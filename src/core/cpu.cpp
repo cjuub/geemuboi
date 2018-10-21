@@ -4,7 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
-CPU::CPU(IMmu& mmu_in) : mmu(mmu_in), 
+CPU::CPU(IMmu& mmu_in, Registers& regs_in) : mmu(mmu_in), 
+    regs(regs_in),
     instructions{
         std::bind(&CPU::nop, this),
         std::bind(&CPU::ld_bc_d16, this),
@@ -519,16 +520,6 @@ CPU::CPU(IMmu& mmu_in) : mmu(mmu_in),
         std::bind(&CPU::set_7_mhl, this),
         std::bind(&CPU::set_7_a, this)
     },
-    a{},
-    b{},
-    c{},
-    d{},
-    e{},
-    h{},
-    l{},
-    f{},
-    pc{},
-    sp{},
     cycles{},
     instr_text{},
     paused(false)
@@ -542,8 +533,12 @@ CPU::CPU(IMmu& mmu_in) : mmu(mmu_in),
 }
 
 int CPU::execute() {
-    LOG_BREAKPOINT(pc);
-    return instructions[mmu.read_byte(pc++)]();
+    LOG_BREAKPOINT(regs.pc);
+    return instructions[mmu.read_byte(regs.pc++)]();
+}
+
+unsigned CPU::get_cycles_executed() {
+    return cycles;
 }
 
 std::string CPU::print_context() const {
@@ -551,19 +546,19 @@ std::string CPU::print_context() const {
 
     ss << std::hex << std::setfill('0');
 
-    ss << "A: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(a) << " ";
-    ss << "F: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(f) << " ";
-    ss << "PC: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(pc) << std::endl;
+    ss << "A: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.a) << " ";
+    ss << "F: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.f) << " ";
+    ss << "PC: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.pc) << std::endl;
 
-    ss << "B: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(b) << " ";
-    ss << "C: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(c) << " ";
-    ss << "SP: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(sp) << std::endl;
+    ss << "B: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.b) << " ";
+    ss << "C: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.c) << " ";
+    ss << "SP: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.sp) << std::endl;
 
-    ss << "D: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(d) << " ";
-    ss << "E: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(e) << std::endl;
+    ss << "D: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.d) << " ";
+    ss << "E: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.e) << std::endl;
 
-    ss << "H: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(h) << " ";
-    ss << "L: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(l) << std::endl;
+    ss << "H: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.h) << " ";
+    ss << "L: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.l) << std::endl;
 
     return ss.str();
 }
@@ -571,12 +566,12 @@ std::string CPU::print_context() const {
 std::string CPU::print_stack(int before, int after) const {
     std::stringstream ss;
     ss << std::hex;
-    before = (sp + before < 0) ? -sp : before;
-    after = (sp + after > 0xFFFF) ? 0xFFFF - sp : after;
+    before = (regs.sp + before < 0) ? -regs.sp : before;
+    after = (regs.sp + after > 0xFFFF) ? 0xFFFF - regs.sp : after;
     for (int i = before; i != after; ++i) {
         ss << ((i == 0) ? ">" : " ");
-        ss << "0x" << static_cast<unsigned>(sp + i * 2) << ": ";
-        ss << "0x" << static_cast<unsigned>(mmu.read_word(sp + i * 2)) << std::endl;
+        ss << "0x" << static_cast<unsigned>(regs.sp + i * 2) << ": ";
+        ss << "0x" << static_cast<unsigned>(mmu.read_word(regs.sp + i * 2)) << std::endl;
     }
 
     return ss.str();
@@ -585,12 +580,12 @@ std::string CPU::print_stack(int before, int after) const {
 std::string CPU::print_curr_instr(int before, int after) const {
     std::stringstream ss;
     ss << std::hex;
-    before = (pc + before < 0) ? -pc : before;
-    after = (pc + after > 0xFFFF) ? 0xFFFF - pc : after;
+    before = (regs.pc + before < 0) ? -regs.pc : before;
+    after = (regs.pc + after > 0xFFFF) ? 0xFFFF - regs.pc : after;
     for (int i = before; i != after; ++i) {
         ss << ((i == 0) ? ">" : " ");
-        ss << "0x" << static_cast<unsigned>(pc + i) << ": ";
-        ss << instr_text[mmu.read_byte(pc + i)] << std::endl;
+        ss << "0x" << static_cast<unsigned>(regs.pc + i) << ": ";
+        ss << instr_text[mmu.read_byte(regs.pc + i)] << std::endl;
     }
 
     return ss.str();
@@ -598,323 +593,325 @@ std::string CPU::print_curr_instr(int before, int after) const {
 
 // 0x00
 int CPU::nop() {
+    cycles += 1;
     return 1;
 }
 
 int CPU::ld_bc_d16() {
-    ld_r16_r16(b, c, mmu.read_word(pc));
-    pc += 2;
+    ld_r16_r16(regs.b, regs.c, mmu.read_word(regs.pc));
+    regs.pc += 2;
+    cycles += 3;
     return 3;
 }
 
 int CPU::ld_mbc_a() {
-    uint16_t addr = (b << 8) + c;
-    ld_mr_r8(addr, a);
+    uint16_t addr = (regs.b << 8) + regs.c;
+    ld_mr_r8(addr, regs.a);
     return 2;
 }
 
 int CPU::inc_bc() {
-    inc_r16(b, c);
+    inc_r16(regs.b, regs.c);
     return 2;
 }
 
 int CPU::inc_b() {
-    inc_r8(b);
+    inc_r8(regs.b);
     return 1;
 }
 
 int CPU::dec_b() {
-    dec_r8(b);
+    dec_r8(regs.b);
     return 1;
 }
 
 int CPU::ld_b_d8() {
-    ld_r8_r8(b, mmu.read_byte(pc++));
+    ld_r8_r8(regs.b, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::rlca() {
-    f = 0;
-    if (a & 0x80) {
-        f |= 0x10;
+    regs.f = 0;
+    if (regs.a & 0x80) {
+        regs.f |= 0x10;
     }
 
-    a = (a << 1) + (f >> 4);
+    regs.a = (regs.a << 1) + (regs.f >> 4);
     return 1;
 }
 
 int CPU::ld_ma16_sp() {
-    uint16_t addr = mmu.read_word(pc);
-    pc += 2;
-    mmu.write_word(addr, sp);
+    uint16_t addr = mmu.read_word(regs.pc);
+    regs.pc += 2;
+    mmu.write_word(addr, regs.sp);
     return 5;
 }
 
 int CPU::add_hl_bc() {
-    add_hl_r16(b, c);
+    add_hl_r16(regs.b, regs.c);
     return 2;
 }
 int CPU::ld_a_mbc() {
-    uint16_t addr = (b << 8) + c;
-    ld_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.b << 8) + regs.c;
+    ld_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::dec_bc() {
-    dec_r16(b, c);
+    dec_r16(regs.b, regs.c);
     return 2;
 }
 
 int CPU::inc_c() {
-    inc_r8(b);
+    inc_r8(regs.b);
     return 1;
 }
 
 int CPU::dec_c() {
-    dec_r8(c);
+    dec_r8(regs.c);
     return 1;
 }
 
 int CPU::ld_c_d8() {
-    ld_r8_r8(c, mmu.read_byte(pc++));
+    ld_r8_r8(regs.c, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::rrca() {
-    f = 0;
-    if (a & 0x1) {
-        f |= 0x10;
+    regs.f = 0;
+    if (regs.a & 0x1) {
+        regs.f |= 0x10;
     }
 
-    a = (a >> 1) + (f << 3);
+    regs.a = (regs.a >> 1) + (regs.f << 3);
     return 1;
 }
 
 // 0x1
 int CPU::stop() {
     // unknown?
-    pc++;
+    regs.pc++;
     return 1;
 }
 
 int CPU::ld_de_d16() {
-    ld_r16_r16(d, e, mmu.read_word(pc));
-    pc += 2;
+    ld_r16_r16(regs.d, regs.e, mmu.read_word(regs.pc));
+    regs.pc += 2;
     return 3;
 }
 
 int CPU::ld_mde_a() {
-    uint16_t addr = (d << 8) + e;
-    ld_mr_r8(addr, a);
+    uint16_t addr = (regs.d << 8) + regs.e;
+    ld_mr_r8(addr, regs.a);
     return 2;
 }
 
 int CPU::inc_de() {
-    inc_r16(d, e);
+    inc_r16(regs.d, regs.e);
     return 2;
 }
 
 int CPU::inc_d() {
-    inc_r8(b);
+    inc_r8(regs.b);
     return 1;
 }
 
 int CPU::dec_d() {
-    dec_r8(d);
+    dec_r8(regs.d);
     return 1;
 }
 
 int CPU::ld_d_d8() {
-    ld_r8_r8(d, mmu.read_byte(pc++));
+    ld_r8_r8(regs.d, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::rla() {
-    uint8_t carry = (f & 0x10) >> 4;
-    f = 0;
-    if (a & 0x80) {
-        f |= 0x10;
+    uint8_t carry = (regs.f & 0x10) >> 4;
+    regs.f = 0;
+    if (regs.a & 0x80) {
+        regs.f |= 0x10;
     }
 
-    a = (a << 1) + carry;
+    regs.a = (regs.a << 1) + carry;
     return 1;
 }
 
 int CPU::jr_r8() {
     // CHECK
-    int offset = static_cast<int8_t>(mmu.read_byte(pc)) + 2;
-    pc += offset - 1;
+    int offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
+    regs.pc += offset - 1;
     return 3;
 }
 
 int CPU::add_hl_de() {
-    add_hl_r16(d, e);
+    add_hl_r16(regs.d, regs.e);
     return 2;
 }
 
 int CPU::ld_a_mde() {
-    uint16_t addr = (d << 8) + e;
-    ld_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.d << 8) + regs.e;
+    ld_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::dec_de() {
-    dec_r16(d, e);
+    dec_r16(regs.d, regs.e);
     return 2;
 }
 
 int CPU::inc_e() {
-    inc_r8(e);
+    inc_r8(regs.e);
     return 1;
 }
 
 int CPU::dec_e() {
-    dec_r8(e);
+    dec_r8(regs.e);
     return 1;
 }
 
 int CPU::ld_e_d8() {
-    ld_r8_r8(e, mmu.read_byte(pc++));
+    ld_r8_r8(regs.e, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::rra() {
-    uint8_t carry = (f & 0x10) << 3;
-    f = 0;
-    if (a & 0x1) {
-        f |= 0x10;
+    uint8_t carry = (regs.f & 0x10) << 3;
+    regs.f = 0;
+    if (regs.a & 0x1) {
+        regs.f |= 0x10;
     }
 
-    a = (a >> 1) + carry;
+    regs.a = (regs.a >> 1) + carry;
     return 1;
 }
 
 // 0x2
 int CPU::jr_nz_r8() {
-    if (!(f & Z_FLAG)) {
-        int offset = static_cast<int8_t>(mmu.read_byte(pc)) + 2;
-        pc += offset - 1;
+    if (!(regs.f & Z_FLAG)) {
+        int offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
+        regs.pc += offset - 1;
         return 3;
     } else {
-        pc += 1;
+        regs.pc += 1;
         return 2;
     }
 }
 
 int CPU::ld_hl_d16() {
-    ld_r16_r16(h, l, mmu.read_word(pc));
-    pc += 2;
+    ld_r16_r16(regs.h, regs.l, mmu.read_word(regs.pc));
+    regs.pc += 2;
     return 3;
 }
 
 int CPU::ldi_mhl_a() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, a);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.a);
     inc_hl();
     return 2;
 }
 
 int CPU::inc_hl() {
-    inc_r16(h, l);
+    inc_r16(regs.h, regs.l);
     return 2;
 }
 
 int CPU::inc_h() {
-    inc_r8(h);
+    inc_r8(regs.h);
     return 1;
 }
 
 int CPU::dec_h() {
-    dec_r8(h);
+    dec_r8(regs.h);
     return 1;
 }
 
 int CPU::ld_h_d8() {
-    ld_r8_r8(h, mmu.read_byte(pc++));
+    ld_r8_r8(regs.h, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::daa() {
     // CHECK
-    uint8_t a_tmp = a;
+    uint8_t a_tmp = regs.a;
 
-    if ((f & 0x20) || ((a & 0xF) > 9)) {
-        a += 6; 
+    if ((regs.f & 0x20) || ((regs.a & 0xF) > 9)) {
+        regs.a += 6; 
     }
 
-    f &= 0xEF;
+    regs.f &= 0xEF;
     
-    if ((f & 0x20) || (a_tmp > 0x99)) { 
-        a += 0x60; 
-        f |= 0x10; 
+    if ((regs.f & 0x20) || (a_tmp > 0x99)) { 
+        regs.a += 0x60; 
+        regs.f |= 0x10; 
     } 
 
     return 1;
 }
 
 int CPU::jr_z_r8() {
-    if (f & 0x80) {
-        int offset = static_cast<int8_t>(mmu.read_byte(pc)) + 2;
-        pc += offset - 1;
+    if (regs.f & 0x80) {
+        int offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
+        regs.pc += offset - 1;
         return 3;
     } else {
-        pc += 1;
+        regs.pc += 1;
         return 2;
     }
 }
 
 int CPU::add_hl_hl() {
-    add_hl_r16(h, l);
+    add_hl_r16(regs.h, regs.l);
     return 2;
 }
 
 int CPU::ldi_a_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.a, mmu.read_byte(addr));
     inc_hl();
     return 2;
 }
 
 int CPU::dec_hl() {
-    dec_r16(h, l);
+    dec_r16(regs.h, regs.l);
     return 2;
 }
 int CPU::inc_l() {
-    inc_r8(l);
+    inc_r8(regs.l);
     return 1;
 }
 
 int CPU::dec_l() {
-    dec_r8(l);
+    dec_r8(regs.l);
     return 1;
 }
 
 int CPU::ld_l_d8() {
-    ld_r8_r8(l, mmu.read_byte(pc++));
+    ld_r8_r8(regs.l, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::cpl() {
-    a ^= 0xFF;
-    f |= 0x60;
+    regs.a ^= 0xFF;
+    regs.f |= 0x60;
     return 1;
 }
 
 // 0x3
 int CPU::jr_nc_r8() {
-    if (!(f & 0x10)) {
-        int offset = static_cast<int8_t>(mmu.read_byte(pc)) + 2;
-        pc += offset - 1;
+    if (!(regs.f & 0x10)) {
+        int offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
+        regs.pc += offset - 1;
         return 3;
     } else {
-        pc += 1;
+        regs.pc += 1;
         return 2;
     }
 }
 
 int CPU::ld_sp_d16() {
-    sp = mmu.read_word(pc);
-    pc += 2;
+    regs.sp = mmu.read_word(regs.pc);
+    regs.pc += 2;
     return 3;
 }
 
@@ -925,12 +922,12 @@ int CPU::ldd_mhl_a() {
 }
 
 int CPU::inc_sp() {
-    ++sp;
+    ++regs.sp;
     return 2;
 }
 
 int CPU::inc_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
 
     // CHECK
@@ -941,7 +938,7 @@ int CPU::inc_mhl() {
 }
 
 int CPU::dec_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
 
     // CHECK
@@ -952,33 +949,33 @@ int CPU::dec_mhl() {
 }
 
 int CPU::ld_mhl_d8() {
-    uint16_t addr = (h << 8) + l;
-    uint8_t val = mmu.read_byte(pc++);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    uint8_t val = mmu.read_byte(regs.pc++);
     mmu.write_byte(addr, val);
     return 3;
 }
 
 int CPU::scf() {
-    f &= 0x80;
-    f |= 0x10;
+    regs.f &= 0x80;
+    regs.f |= 0x10;
     return 1;
 }
 
 int CPU::jr_c_r8() {
-    if (f & 0x10) {
-        int8_t offset = static_cast<int8_t>(mmu.read_byte(pc)) + 2;
-        pc += offset - 1;
+    if (regs.f & 0x10) {
+        int8_t offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
+        regs.pc += offset - 1;
         return 3;
     } else {
-        pc += 1;
+        regs.pc += 1;
         return 2;
     }
 }
 
 int CPU::add_hl_sp() {
     // CHECK
-    uint8_t high = static_cast<uint8_t>(sp >> 8);
-    uint8_t low = static_cast<uint8_t>(sp);
+    uint8_t high = static_cast<uint8_t>(regs.sp >> 8);
+    uint8_t low = static_cast<uint8_t>(regs.sp);
     add_hl_r16(high, low);
     return 2;
 }
@@ -990,314 +987,314 @@ int CPU::ldd_a_mhl() {
 }
 
 int CPU::dec_sp() {
-    --sp;
+    --regs.sp;
     return 2;
 }
 
 int CPU::inc_a() {
-    inc_r8(a);
+    inc_r8(regs.a);
     return 1;
 }
 
 int CPU::dec_a() {
-    dec_r8(a);
+    dec_r8(regs.a);
     return 1;
 }
 
 int CPU::ld_a_d8() {
-    ld_r8_r8(a, mmu.read_byte(pc++));
+    ld_r8_r8(regs.a, mmu.read_byte(regs.pc++));
     return 2;
 }
 
 int CPU::ccf() {
-    f &= 0x90;
-    f ^= 0x10;
+    regs.f &= 0x90;
+    regs.f ^= 0x10;
     return 1;
 }
 
 // 0x4
 int CPU::ld_b_b() {
-    ld_r8_r8(b, b);
+    ld_r8_r8(regs.b, regs.b);
     return 1;
 }
 
 int CPU::ld_b_c() {
-    ld_r8_r8(b, c);
+    ld_r8_r8(regs.b, regs.c);
     return 1;
 }
 
 int CPU::ld_b_d() {
-    ld_r8_r8(b, d);
+    ld_r8_r8(regs.b, regs.d);
     return 1;
 }
 
 int CPU::ld_b_e() {
-    ld_r8_r8(b, e);
+    ld_r8_r8(regs.b, regs.e);
     return 1;
 }
 
 int CPU::ld_b_h() {
-    ld_r8_r8(b, h);
+    ld_r8_r8(regs.b, regs.h);
     return 1;
 }
 
 int CPU::ld_b_l() {
-    ld_r8_r8(b, l);
+    ld_r8_r8(regs.b, regs.l);
     return 1;
 }
 
 int CPU::ld_b_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(b, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.b, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_b_a() {
-    ld_r8_r8(b, a);
+    ld_r8_r8(regs.b, regs.a);
     return 1;
 }
 
 int CPU::ld_c_b() {
-    ld_r8_r8(c, b);
+    ld_r8_r8(regs.c, regs.b);
     return 1;
 }
 
 int CPU::ld_c_c() {
-    ld_r8_r8(c, c);
+    ld_r8_r8(regs.c, regs.c);
     return 1;
 }
 
 int CPU::ld_c_d() {
-    ld_r8_r8(c, d);
+    ld_r8_r8(regs.c, regs.d);
     return 1;
 }
 
 int CPU::ld_c_e() {
-    ld_r8_r8(c, e);
+    ld_r8_r8(regs.c, regs.e);
     return 1;
 }
 
 int CPU::ld_c_h() {
-    ld_r8_r8(c, h);
+    ld_r8_r8(regs.c, regs.h);
     return 1;
 }
 
 int CPU::ld_c_l() {
-    ld_r8_r8(c, l);
+    ld_r8_r8(regs.c, regs.l);
     return 1;
 }
 
 int CPU::ld_c_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(c, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.c, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_c_a() {
-    ld_r8_r8(c, a);
+    ld_r8_r8(regs.c, regs.a);
     return 1;
 }
 
 // 0x5
 int CPU::ld_d_b() {
-    ld_r8_r8(d, b);
+    ld_r8_r8(regs.d, regs.b);
     return 1;
 }
 
 int CPU::ld_d_c() {
-    ld_r8_r8(d, c);
+    ld_r8_r8(regs.d, regs.c);
     return 1;
 }
 
 int CPU::ld_d_d() {
-    ld_r8_r8(d, d);
+    ld_r8_r8(regs.d, regs.d);
     return 1;
 }
 
 int CPU::ld_d_e() {
-    ld_r8_r8(d, e);
+    ld_r8_r8(regs.d, regs.e);
     return 1;
 }
 
 int CPU::ld_d_h() {
-    ld_r8_r8(d, h);
+    ld_r8_r8(regs.d, regs.h);
     return 1;
 }
 
 int CPU::ld_d_l() {
-    ld_r8_r8(d, l);
+    ld_r8_r8(regs.d, regs.l);
     return 1;
 }
 
 int CPU::ld_d_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(d, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.d, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_d_a() {
-    ld_r8_r8(d, a);
+    ld_r8_r8(regs.d, regs.a);
     return 1;
 }
 
 int CPU::ld_e_b() {
-    ld_r8_r8(e, b);
+    ld_r8_r8(regs.e, regs.b);
     return 1;
 }
 
 int CPU::ld_e_c() {
-    ld_r8_r8(e, c);
+    ld_r8_r8(regs.e, regs.c);
     return 1;
 }
 
 int CPU::ld_e_d() {
-    ld_r8_r8(e, d);
+    ld_r8_r8(regs.e, regs.d);
     return 1;
 }
 
 int CPU::ld_e_e() {
-    ld_r8_r8(e, e);
+    ld_r8_r8(regs.e, regs.e);
     return 1;
 }
 
 int CPU::ld_e_h() {
-    ld_r8_r8(e, h);
+    ld_r8_r8(regs.e, regs.h);
     return 1;
 }
 
 int CPU::ld_e_l() {
-    ld_r8_r8(e, l);
+    ld_r8_r8(regs.e, regs.l);
     return 1;
 }
 
 int CPU::ld_e_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(e, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.e, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_e_a() {
-    ld_r8_r8(e, a);
+    ld_r8_r8(regs.e, regs.a);
     return 1;
 }
 
 // 0x6
 int CPU::ld_h_b() {
-    ld_r8_r8(h, b);
+    ld_r8_r8(regs.h, regs.b);
     return 1;
 }
 
 int CPU::ld_h_c() {
-    ld_r8_r8(h, c);
+    ld_r8_r8(regs.h, regs.c);
     return 1;
 }
 
 int CPU::ld_h_d() {
-    ld_r8_r8(h, d);
+    ld_r8_r8(regs.h, regs.d);
     return 1;
 }
 
 int CPU::ld_h_e() {
-    ld_r8_r8(h, e);
+    ld_r8_r8(regs.h, regs.e);
     return 1;
 }
 
 int CPU::ld_h_h() {
-    ld_r8_r8(h, h);
+    ld_r8_r8(regs.h, regs.h);
     return 1;
 }
 
 int CPU::ld_h_l() {
-    ld_r8_r8(h, l);
+    ld_r8_r8(regs.h, regs.l);
     return 1;
 }
 
 int CPU::ld_h_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(h, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.h, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_h_a() {
-    ld_r8_r8(h, a);
+    ld_r8_r8(regs.h, regs.a);
     return 1;
 }
 
 int CPU::ld_l_b() {
-    ld_r8_r8(l, b);
+    ld_r8_r8(regs.l, regs.b);
     return 1;
 }
 
 int CPU::ld_l_c() {
-    ld_r8_r8(l, c);
+    ld_r8_r8(regs.l, regs.c);
     return 1;
 }
 
 int CPU::ld_l_d() {
-    ld_r8_r8(l, d);
+    ld_r8_r8(regs.l, regs.d);
     return 1;
 }
 
 int CPU::ld_l_e() {
-    ld_r8_r8(l, e);
+    ld_r8_r8(regs.l, regs.e);
     return 1;
 }
 
 int CPU::ld_l_h() {
-    ld_r8_r8(l, h);
+    ld_r8_r8(regs.l, regs.h);
     return 1;
 }
 
 int CPU::ld_l_l() {
-    ld_r8_r8(l, l);
+    ld_r8_r8(regs.l, regs.l);
     return 1;
 }
 
 int CPU::ld_l_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(l, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.l, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_l_a() {
-    ld_r8_r8(l, a);
+    ld_r8_r8(regs.l, regs.a);
     return 1;
 }
 
 // 0x7
 int CPU::ld_mhl_b() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, b);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.b);
     return 2;
 }
 
 int CPU::ld_mhl_c() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, c);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.c);
     return 2;
 }
 
 int CPU::ld_mhl_d() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, d);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.d);
     return 2;
 }
 
 int CPU::ld_mhl_e() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, e);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.e);
     return 2;
 }
 
 int CPU::ld_mhl_h() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, h);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.h);
     return 2;
 }
 
 int CPU::ld_mhl_l() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, l);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.l);
     return 2;
 }
 
@@ -1309,388 +1306,388 @@ int CPU::halt() {
 }
 
 int CPU::ld_mhl_a() {
-    uint16_t addr = (h << 8) + l;
-    ld_mr_r8(addr, a);
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_mr_r8(addr, regs.a);
     return 2;
 }
 int CPU::ld_a_b() {
-    ld_r8_r8(a, b);
+    ld_r8_r8(regs.a, regs.b);
     return 1;
 }
 
 int CPU::ld_a_c() {
-    ld_r8_r8(a, c);
+    ld_r8_r8(regs.a, regs.c);
     return 1;
 }
 
 int CPU::ld_a_d() {
-    ld_r8_r8(a, d);
+    ld_r8_r8(regs.a, regs.d);
     return 1;
 }
 
 int CPU::ld_a_e() {
-    ld_r8_r8(a, e);
+    ld_r8_r8(regs.a, regs.e);
     return 1;
 }
 
 int CPU::ld_a_h() {
-    ld_r8_r8(a, h);
+    ld_r8_r8(regs.a, regs.h);
     return 1;
 }
 
 int CPU::ld_a_l() {
-    ld_r8_r8(a, l);
+    ld_r8_r8(regs.a, regs.l);
     return 1;
 }
 
 int CPU::ld_a_mhl() {
-    uint16_t addr = (h << 8) + l;
-    ld_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    ld_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::ld_a_a() {
-    ld_r8_r8(a, a);
+    ld_r8_r8(regs.a, regs.a);
     return 1;
 }
 
 // 0x8
 int CPU::add_a_b() {
-    add_r8_r8(a, b);
+    add_r8_r8(regs.a, regs.b);
     return 1;
 }
 
 int CPU::add_a_c() {
-    add_r8_r8(a, c);
+    add_r8_r8(regs.a, regs.c);
     return 1;
 }
 
 int CPU::add_a_d() {
-    add_r8_r8(a, d);
+    add_r8_r8(regs.a, regs.d);
     return 1;
 }
 
 int CPU::add_a_e() {
-    add_r8_r8(a, e);
+    add_r8_r8(regs.a, regs.e);
     return 1;
 }
 
 int CPU::add_a_h() {
-    add_r8_r8(a, h);
+    add_r8_r8(regs.a, regs.h);
     return 1;
 }
 
 int CPU::add_a_l() {
-    add_r8_r8(a, l);
+    add_r8_r8(regs.a, regs.l);
     return 1;
 }
 
 int CPU::add_a_mhl() {
-    uint16_t addr = (h << 8) + l;
-    add_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    add_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::add_a_a() {
-    add_r8_r8(a, a);
+    add_r8_r8(regs.a, regs.a);
     return 1;
 }
 
 int CPU::adc_a_b() {
-    adc_r8_r8(a, b);
+    adc_r8_r8(regs.a, regs.b);
     return 1;
 }
 
 int CPU::adc_a_c() {
-    adc_r8_r8(a, c);
+    adc_r8_r8(regs.a, regs.c);
     return 1;
 }
 
 int CPU::adc_a_d() {
-    adc_r8_r8(a, d);
+    adc_r8_r8(regs.a, regs.d);
     return 1;
 }
 
 int CPU::adc_a_e() {
-    adc_r8_r8(a, e);
+    adc_r8_r8(regs.a, regs.e);
     return 1;
 }
 
 int CPU::adc_a_h() {
-    adc_r8_r8(a, h);
+    adc_r8_r8(regs.a, regs.h);
     return 1;
 }
 
 int CPU::adc_a_l() {
-    adc_r8_r8(a, l);
+    adc_r8_r8(regs.a, regs.l);
     return 1;
 }
 
 int CPU::adc_a_mhl() {
-    uint16_t addr = (h << 8) + l;
-    adc_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    adc_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::adc_a_a() {
-    adc_r8_r8(a, a);
+    adc_r8_r8(regs.a, regs.a);
     return 1;
 }
 
 // 0x9
 int CPU::sub_b() {
-    sub_r8(b);
+    sub_r8(regs.b);
     return 1;
 }
 
 int CPU::sub_c() {
-    sub_r8(c);
+    sub_r8(regs.c);
     return 1;
 }
 
 int CPU::sub_d() {
-    sub_r8(d);
+    sub_r8(regs.d);
     return 1;
 }
 
 int CPU::sub_e() {
-    sub_r8(e);
+    sub_r8(regs.e);
     return 1;
 }
 
 int CPU::sub_h() {
-    sub_r8(h);
+    sub_r8(regs.h);
     return 1;
 }
 
 int CPU::sub_l() {
-    sub_r8(l);
+    sub_r8(regs.l);
     return 1;
 }
 
 int CPU::sub_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     sub_r8(mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::sub_a() {
-    sub_r8(a);
+    sub_r8(regs.a);
     return 1;
 }
 
 int CPU::sbc_a_b() {
-    sbc_r8_r8(a, b);
+    sbc_r8_r8(regs.a, regs.b);
     return 1;
 }
 
 int CPU::sbc_a_c() {
-    sbc_r8_r8(a, c);
+    sbc_r8_r8(regs.a, regs.c);
     return 1;
 }
 
 int CPU::sbc_a_d() {
-    sbc_r8_r8(a, d);
+    sbc_r8_r8(regs.a, regs.d);
     return 1;
 }
 
 int CPU::sbc_a_e() {
-    sbc_r8_r8(a, e);
+    sbc_r8_r8(regs.a, regs.e);
     return 1;
 }
 
 int CPU::sbc_a_h() {
-    sbc_r8_r8(a, h);
+    sbc_r8_r8(regs.a, regs.h);
     return 1;
 }
 
 int CPU::sbc_a_l() {
-    sbc_r8_r8(a, l);
+    sbc_r8_r8(regs.a, regs.l);
     return 1;
 }
 
 int CPU::sbc_a_mhl() {
-    uint16_t addr = (h << 8) + l;
-    sbc_r8_r8(a, mmu.read_byte(addr));
+    uint16_t addr = (regs.h << 8) + regs.l;
+    sbc_r8_r8(regs.a, mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::sbc_a_a() {
-    sbc_r8_r8(a, a);
+    sbc_r8_r8(regs.a, regs.a);
     return 1;
 }
 
 // 0xA
 int CPU::and_b() {
-    and_r8(b);
+    and_r8(regs.b);
     return 1;
 }
 
 int CPU::and_c() {
-    and_r8(c);
+    and_r8(regs.c);
     return 1;
 }
 
 int CPU::and_d() {
-    and_r8(d);
+    and_r8(regs.d);
     return 1;
 }
 
 int CPU::and_e() {
-    and_r8(e);
+    and_r8(regs.e);
     return 1;
 }
 
 int CPU::and_h() {
-    and_r8(h);
+    and_r8(regs.h);
     return 1;
 }
 
 int CPU::and_l() {
-    and_r8(l);
+    and_r8(regs.l);
     return 1;
 }
 
 int CPU::and_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     and_r8(mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::and_a() {
-    and_r8(a);
+    and_r8(regs.a);
     return 1;
 }
 
 int CPU::xor_b() {
-    xor_r8(b);
+    xor_r8(regs.b);
     return 1;
 }
 
 int CPU::xor_c() {
-    xor_r8(c);
+    xor_r8(regs.c);
     return 1;
 }
 
 int CPU::xor_d() {
-    xor_r8(d);
+    xor_r8(regs.d);
     return 1;
 }
 
 int CPU::xor_e() {
-    xor_r8(e);
+    xor_r8(regs.e);
     return 1;
 }
 
 int CPU::xor_h() {
-    xor_r8(h);
+    xor_r8(regs.h);
     return 1;
 }
 
 int CPU::xor_l() {
-    xor_r8(l);
+    xor_r8(regs.l);
     return 1;
 }
 
 int CPU::xor_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     xor_r8(mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::xor_a() {
-    xor_r8(a);
+    xor_r8(regs.a);
     return 1;
 }
 
 // 0xB
 int CPU::or_b() {
-    or_r8(b);
+    or_r8(regs.b);
     return 1;
 }
 
 int CPU::or_c() {
-    or_r8(c);
+    or_r8(regs.c);
     return 1;
 }
 
 int CPU::or_d() {
-    or_r8(d);
+    or_r8(regs.d);
     return 1;
 }
 
 int CPU::or_e() {
-    or_r8(e);
+    or_r8(regs.e);
     return 1;
 }
 
 int CPU::or_h() {
-    or_r8(h);
+    or_r8(regs.h);
     return 1;
 }
 
 int CPU::or_l() {
-    or_r8(l);
+    or_r8(regs.l);
     return 1;
 }
 
 int CPU::or_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     or_r8(mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::or_a() {
-    or_r8(a);
+    or_r8(regs.a);
     return 1;
 }
 
 int CPU::cp_b() {
-    cp_r8(b);
+    cp_r8(regs.b);
     return 1;
 }
 
 int CPU::cp_c() {
-    cp_r8(c);
+    cp_r8(regs.c);
     return 1;
 }
 
 int CPU::cp_d() {
-    cp_r8(d);
+    cp_r8(regs.d);
     return 1;
 }
 
 int CPU::cp_e() {
-    cp_r8(e);
+    cp_r8(regs.e);
     return 1;
 }
 
 int CPU::cp_h() {
-    cp_r8(h);
+    cp_r8(regs.h);
     return 1;
 }
 
 int CPU::cp_l() {
-    cp_r8(l);
+    cp_r8(regs.l);
     return 1;
 }
 
 int CPU::cp_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     cp_r8(mmu.read_byte(addr));
     return 2;
 }
 
 int CPU::cp_a() {
-    cp_r8(a);
+    cp_r8(regs.a);
     return 1;
 }
 
 // 0xC
 int CPU::ret_nz() {
-    if (!(f & 0x80)) {
-        pc = mmu.read_word(sp);
-        sp += 2;
+    if (!(regs.f & 0x80)) {
+        regs.pc = mmu.read_word(regs.sp);
+        regs.sp += 2;
         return 5;
     } else {
         return 2;
@@ -1698,44 +1695,44 @@ int CPU::ret_nz() {
 }
 
 int CPU::pop_bc() {
-    pop_r16(b, c);
+    pop_r16(regs.b, regs.c);
     return 3;
 }
 
 int CPU::jp_nz_a16() {
-    if (!(f & 0x80)) {
-        pc = mmu.read_word(pc);
+    if (!(regs.f & 0x80)) {
+        regs.pc = mmu.read_word(regs.pc);
         return 4;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 
 int CPU::jp_a16() {
-    pc = mmu.read_word(pc);
+    regs.pc = mmu.read_word(regs.pc);
     return 4;
 }
 
 int CPU::call_nz_a16() {
-    if (!(f & 0x80)) {
-        mmu.write_word(sp - 2, pc + 2);
-        sp -= 2;
-        pc = mmu.read_word(pc);
+    if (!(regs.f & 0x80)) {
+        mmu.write_word(regs.sp - 2, regs.pc + 2);
+        regs.sp -= 2;
+        regs.pc = mmu.read_word(regs.pc);
         return 6;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 
 int CPU::push_bc() {
-    push_r16(b, c);
+    push_r16(regs.b, regs.c);
     return 4;
 }
 
 int CPU::add_a_d8() {
-    add_r8_r8(a, mmu.read_byte(pc++));
+    add_r8_r8(regs.a, mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1745,9 +1742,9 @@ int CPU::rst_00h() {
 }
 
 int CPU::ret_z() {
-    if (f & 0x80) {
-        pc = mmu.read_word(sp);
-        sp += 2;
+    if (regs.f & 0x80) {
+        regs.pc = mmu.read_word(regs.sp);
+        regs.sp += 2;
         return 5;
     } else {
         return 2;
@@ -1755,46 +1752,46 @@ int CPU::ret_z() {
 }
 
 int CPU::ret() {
-    pc = mmu.read_word(sp);
-    sp += 2;
+    regs.pc = mmu.read_word(regs.sp);
+    regs.sp += 2;
     return 4;
 }
 
 int CPU::jp_z_a16() {
-    if (f & 0x80) {
-        pc = mmu.read_word(pc);
+    if (regs.f & 0x80) {
+        regs.pc = mmu.read_word(regs.pc);
         return 4;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 
 int CPU::prefix_cb() {
-    return instructions[0x100 + mmu.read_byte(pc++)]();
+    return instructions[0x100 + mmu.read_byte(regs.pc++)]();
 }
 
 int CPU::call_z_a16() {
-    if (f & 0x80) {
-        mmu.write_word(sp - 2, pc + 2);
-        sp -= 2;
-        pc = mmu.read_word(pc);
+    if (regs.f & 0x80) {
+        mmu.write_word(regs.sp - 2, regs.pc + 2);
+        regs.sp -= 2;
+        regs.pc = mmu.read_word(regs.pc);
         return 6;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 
 int CPU::call_a16() {
-    mmu.write_word(sp - 2, pc + 2);
-    sp -= 2;
-    pc = mmu.read_word(pc);
+    mmu.write_word(regs.sp - 2, regs.pc + 2);
+    regs.sp -= 2;
+    regs.pc = mmu.read_word(regs.pc);
     return 6;
 }
 
 int CPU::adc_a_d8() {
-    adc_r8_r8(a, mmu.read_byte(pc++));
+    adc_r8_r8(regs.a, mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1805,9 +1802,9 @@ int CPU::rst_08h() {
 
 // 0xD
 int CPU::ret_nc() {
-    if (!(f & 0x10)) {
-        pc = mmu.read_word(sp);
-        sp += 2;
+    if (!(regs.f & 0x10)) {
+        regs.pc = mmu.read_word(regs.sp);
+        regs.sp += 2;
         return 5;
     } else {
         return 2;
@@ -1815,39 +1812,39 @@ int CPU::ret_nc() {
 }
 
 int CPU::pop_de() {
-    pop_r16(d, e);
+    pop_r16(regs.d, regs.e);
     return 3;
 }
 
 int CPU::jp_nc_a16() {
-    if (!(f & 0x10)) {
-        pc = mmu.read_word(pc);
+    if (!(regs.f & 0x10)) {
+        regs.pc = mmu.read_word(regs.pc);
         return 4;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 //
 int CPU::call_nc_a16() {
-    if (!(f & 0x10)) {
-        mmu.write_word(sp - 2, pc + 2);
-        sp -= 2;
-        pc = mmu.read_word(pc);
+    if (!(regs.f & 0x10)) {
+        mmu.write_word(regs.sp - 2, regs.pc + 2);
+        regs.sp -= 2;
+        regs.pc = mmu.read_word(regs.pc);
         return 6;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 
 int CPU::push_de() {
-    push_r16(d, e);
+    push_r16(regs.d, regs.e);
     return 4;
 }
 
 int CPU::sub_d8() {
-    sub_r8(mmu.read_byte(pc++));
+    sub_r8(mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1857,9 +1854,9 @@ int CPU::rst_10h() {
 }
 
 int CPU::ret_c() {
-    if (f & 0x10) {
-        pc = mmu.read_word(sp);
-        sp += 2;
+    if (regs.f & 0x10) {
+        regs.pc = mmu.read_word(regs.sp);
+        regs.sp += 2;
         return 5;
     } else {
         return 2;
@@ -1867,8 +1864,8 @@ int CPU::ret_c() {
 }
 
 int CPU::reti() {
-    pc = mmu.read_word(sp);
-    sp += 2;
+    regs.pc = mmu.read_word(regs.sp);
+    regs.sp += 2;
     // TODO enable interrupts
     LOG("WARNING: Called unimplemented instruction reti()\n");
     LOG_ALL();
@@ -1876,29 +1873,29 @@ int CPU::reti() {
 }
 
 int CPU::jp_c_a16() {
-    if (f & 0x10) {
-        pc = mmu.read_word(pc);
+    if (regs.f & 0x10) {
+        regs.pc = mmu.read_word(regs.pc);
         return 4;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 //
 int CPU::call_c_a16() {
-    if (f & 0x10) {
-        mmu.write_word(sp - 2, pc + 2);
-        sp -= 2;
-        pc = mmu.read_word(pc);
+    if (regs.f & 0x10) {
+        mmu.write_word(regs.sp - 2, regs.pc + 2);
+        regs.sp -= 2;
+        regs.pc = mmu.read_word(regs.pc);
         return 6;
     } else {
-        pc += 2;
+        regs.pc += 2;
         return 3;
     }
 }
 //
 int CPU::sbc_a_d8() {
-    sbc_r8_r8(a, mmu.read_byte(pc++));
+    sbc_r8_r8(regs.a, mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1909,29 +1906,29 @@ int CPU::rst_18h() {
 
 // 0xE
 int CPU::ldh_ma8_a() {
-    uint8_t val = mmu.read_byte(pc++);
-    mmu.write_byte(0xFF00 + val, a);
+    uint8_t val = mmu.read_byte(regs.pc++);
+    mmu.write_byte(0xFF00 + val, regs.a);
     return 3;
 }
 
 int CPU::pop_hl() {
-    pop_r16(h, l);
+    pop_r16(regs.h, regs.l);
     return 3;
 }
 
 int CPU::ld_mc_a() {
-    mmu.write_byte(0xFF00 + c, a);
+    mmu.write_byte(0xFF00 + regs.c, regs.a);
     return 3;
 }
 //
 //
 int CPU::push_hl() {
-    push_r16(h, l);
+    push_r16(regs.h, regs.l);
     return 4;
 }
 
 int CPU::and_d8() {
-    and_r8(mmu.read_byte(pc++));
+    and_r8(mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1941,37 +1938,37 @@ int CPU::rst_20h() {
 }
 
 int CPU::add_sp_r8() {
-    f = 0;
-    int8_t val = static_cast<int8_t>(mmu.read_byte(pc++));
+    regs.f = 0;
+    int8_t val = static_cast<int8_t>(mmu.read_byte(regs.pc++));
 
-    if ((sp & 0xFF) + val > 0xFF) {
-        f |= C_FLAG; 
+    if ((regs.sp & 0xFF) + val > 0xFF) {
+        regs.f |= C_FLAG; 
     }
 
-    if ((sp & 0xF) + (val & 0xF) > 0xF) {
-        f |= H_FLAG;
+    if ((regs.sp & 0xF) + (val & 0xF) > 0xF) {
+        regs.f |= H_FLAG;
     }
 
-    sp += val;
+    regs.sp += val;
     return 4;
 }
 
 int CPU::jp_mhl() {
-    pc = (h >> 8) + l;
+    regs.pc = (regs.h >> 8) + regs.l;
     return 1;
 }
 
 int CPU::ld_ma16_a() {
-    uint16_t val = mmu.read_word(pc);
-    mmu.write_byte(val, a);
-    pc += 2;
+    uint16_t val = mmu.read_word(regs.pc);
+    mmu.write_byte(val, regs.a);
+    regs.pc += 2;
     return 4;
 }
 //
 //
 //
 int CPU::xor_d8() {
-    xor_r8(mmu.read_byte(pc++));
+    xor_r8(mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -1982,19 +1979,19 @@ int CPU::rst_28h() {
 
 // 0xF
 int CPU::ldh_a_ma8() {
-    uint8_t val = mmu.read_byte(pc++);
-    a = mmu.read_byte(0xFF00 + val);
+    uint8_t val = mmu.read_byte(regs.pc++);
+    regs.a = mmu.read_byte(0xFF00 + val);
     return 3;
 }
 
 int CPU::pop_af() {
-    pop_r16(a, f);
+    pop_r16(regs.a, regs.f);
     return 3;
 }
 
 int CPU::ld_a_mc() {
     // not used?
-    a = mmu.read_byte(0xFF00 + c);
+    regs.a = mmu.read_byte(0xFF00 + regs.c);
     return 2;
 }
 
@@ -2006,12 +2003,12 @@ int CPU::di() {
 }
 //
 int CPU::push_af() {
-    push_r16(a, f);
+    push_r16(regs.a, regs.f);
     return 4;
 }
 
 int CPU::or_d8() {
-    or_r8(mmu.read_byte(pc++));
+    or_r8(mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -2021,29 +2018,29 @@ int CPU::rst_30h() {
 }
 
 int CPU::ldhl_sp_r8() {
-    f = 0;
-    int8_t val = static_cast<int8_t>(mmu.read_byte(pc++));
+    regs.f = 0;
+    int8_t val = static_cast<int8_t>(mmu.read_byte(regs.pc++));
 
-    if ((sp & 0xFF) + val > 0xFF) {
-        f |= C_FLAG;
+    if ((regs.sp & 0xFF) + val > 0xFF) {
+        regs.f |= C_FLAG;
     }
 
-    if ((sp & 0xF) + (val & 0xF) > 0xF) {
-        f |= H_FLAG;
+    if ((regs.sp & 0xF) + (val & 0xF) > 0xF) {
+        regs.f |= H_FLAG;
     }
 
-    h = (sp + val) >> 8;
-    l = static_cast<uint8_t>(sp + val);
+    regs.h = (regs.sp + val) >> 8;
+    regs.l = static_cast<uint8_t>(regs.sp + val);
     return 3;
 }
 int CPU::ld_sp_hl() {
-    sp = (h << 8) + l;
+    regs.sp = (regs.h << 8) + regs.l;
     return 2;
 }
 
 int CPU::ld_a_ma16() {
-    a = mmu.read_byte(mmu.read_word(pc));
-    pc += 2;
+    regs.a = mmu.read_byte(mmu.read_word(regs.pc));
+    regs.pc += 2;
     return 4;
 }
 
@@ -2056,7 +2053,7 @@ int CPU::ei() {
 //
 //
 int CPU::cp_d8() {
-    cp_r8(mmu.read_byte(pc++));
+    cp_r8(mmu.read_byte(regs.pc++));
     return 2;
 }
 
@@ -2072,37 +2069,37 @@ int CPU::unimplemented() {
 }
 
 int CPU::rlc_b() {
-    rlc_r8(b);
+    rlc_r8(regs.b);
     return 2;
 }
 
 int CPU::rlc_c() {
-    rlc_r8(c);
+    rlc_r8(regs.c);
     return 2;
 }
 
 int CPU::rlc_d() {
-    rlc_r8(d);
+    rlc_r8(regs.d);
     return 2;
 }
 
 int CPU::rlc_e() {
-    rlc_r8(e);
+    rlc_r8(regs.e);
     return 2;
 }
 
 int CPU::rlc_h() {
-    rlc_r8(h);
+    rlc_r8(regs.h);
     return 2;
 }
 
 int CPU::rlc_l() {
-    rlc_r8(l);
+    rlc_r8(regs.l);
     return 2;
 }
 
 int CPU::rlc_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     rlc_r8(val);
     mmu.write_byte(addr, val);
@@ -2110,42 +2107,42 @@ int CPU::rlc_mhl() {
 }
 
 int CPU::rlc_a() {
-    rlc_r8(a);
+    rlc_r8(regs.a);
     return 2;
 }
 
 int CPU::rrc_b() {
-    rrc_r8(b);
+    rrc_r8(regs.b);
     return 2;
 }
 
 int CPU::rrc_c() {
-    rrc_r8(c);
+    rrc_r8(regs.c);
     return 2;
 }
 
 int CPU::rrc_d() {
-    rrc_r8(d);
+    rrc_r8(regs.d);
     return 2;
 }
 
 int CPU::rrc_e() {
-    rrc_r8(e);
+    rrc_r8(regs.e);
     return 2;
 }
 
 int CPU::rrc_h() {
-    rrc_r8(h);
+    rrc_r8(regs.h);
     return 2;
 }
 
 int CPU::rrc_l() {
-    rrc_r8(l);
+    rrc_r8(regs.l);
     return 2;
 }
 
 int CPU::rrc_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     rrc_r8(val);
     mmu.write_byte(addr, val);
@@ -2153,42 +2150,42 @@ int CPU::rrc_mhl() {
 }
 
 int CPU::rrc_a() {
-    rrc_r8(a);
+    rrc_r8(regs.a);
     return 2;
 }
 
 int CPU::rl_b() {
-    rl_r8(b);
+    rl_r8(regs.b);
     return 2;
 }
 
 int CPU::rl_c() {
-    rl_r8(c);
+    rl_r8(regs.c);
     return 2;
 }
 
 int CPU::rl_d() {
-    rl_r8(d);
+    rl_r8(regs.d);
     return 2;
 }
 
 int CPU::rl_e() {
-    rl_r8(e);
+    rl_r8(regs.e);
     return 2;
 }
 
 int CPU::rl_h() {
-    rl_r8(h);
+    rl_r8(regs.h);
     return 2;
 }
 
 int CPU::rl_l() {
-    rl_r8(l);
+    rl_r8(regs.l);
     return 2;
 }
 
 int CPU::rl_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     rl_r8(val);
     mmu.write_byte(addr, val);
@@ -2196,42 +2193,42 @@ int CPU::rl_mhl() {
 }
 
 int CPU::rl_a() {
-    rl_r8(a);
+    rl_r8(regs.a);
     return 2;
 }
 
 int CPU::rr_b() {
-    rr_r8(b);
+    rr_r8(regs.b);
     return 2;
 }
 
 int CPU::rr_c() {
-    rr_r8(c);
+    rr_r8(regs.c);
     return 2;
 }
 
 int CPU::rr_d() {
-    rr_r8(d);
+    rr_r8(regs.d);
     return 2;
 }
 
 int CPU::rr_e() {
-    rr_r8(e);
+    rr_r8(regs.e);
     return 2;
 }
 
 int CPU::rr_h() {
-    rr_r8(h);
+    rr_r8(regs.h);
     return 2;
 }
 
 int CPU::rr_l() {
-    rr_r8(l);
+    rr_r8(regs.l);
     return 2;
 }
 
 int CPU::rr_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     rr_r8(val);
     mmu.write_byte(addr, val);
@@ -2239,42 +2236,42 @@ int CPU::rr_mhl() {
 }
 
 int CPU::rr_a() {
-    rr_r8(a);
+    rr_r8(regs.a);
     return 2;
 }
 
 int CPU::sla_b() {
-    sla_r8(b);
+    sla_r8(regs.b);
     return 2;
 }
 
 int CPU::sla_c() {
-    sla_r8(c);
+    sla_r8(regs.c);
     return 2;
 }
 
 int CPU::sla_d() {
-    sla_r8(d);
+    sla_r8(regs.d);
     return 2;
 }
 
 int CPU::sla_e() {
-    sla_r8(e);
+    sla_r8(regs.e);
     return 2;
 }
 
 int CPU::sla_h() {
-    sla_r8(h);
+    sla_r8(regs.h);
     return 2;
 }
 
 int CPU::sla_l() {
-    sla_r8(l);
+    sla_r8(regs.l);
     return 2;
 }
 
 int CPU::sla_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     sla_r8(val);
     mmu.write_byte(addr, val);
@@ -2282,42 +2279,42 @@ int CPU::sla_mhl() {
 }
 
 int CPU::sla_a() {
-    sla_r8(a);
+    sla_r8(regs.a);
     return 2;
 }
 
 int CPU::sra_b() {
-    sra_r8(b);
+    sra_r8(regs.b);
     return 2;
 }
 
 int CPU::sra_c() {
-    sra_r8(c);
+    sra_r8(regs.c);
     return 2;
 }
 
 int CPU::sra_d() {
-    sra_r8(d);
+    sra_r8(regs.d);
     return 2;
 }
 
 int CPU::sra_e() {
-    sra_r8(e);
+    sra_r8(regs.e);
     return 2;
 }
 
 int CPU::sra_h() {
-    sra_r8(h);
+    sra_r8(regs.h);
     return 2;
 }
 
 int CPU::sra_l() {
-    sra_r8(l);
+    sra_r8(regs.l);
     return 2;
 }
 
 int CPU::sra_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     sra_r8(val);
     mmu.write_byte(addr, val);
@@ -2325,42 +2322,42 @@ int CPU::sra_mhl() {
 }
 
 int CPU::sra_a() {
-    sra_r8(a);
+    sra_r8(regs.a);
     return 2;
 }
 
 int CPU::swap_b() {
-    swap_r8(b);
+    swap_r8(regs.b);
     return 2;
 }
 
 int CPU::swap_c() {
-    swap_r8(c);
+    swap_r8(regs.c);
     return 2;
 }
 
 int CPU::swap_d() {
-    swap_r8(d);
+    swap_r8(regs.d);
     return 2;
 }
 
 int CPU::swap_e() {
-    swap_r8(e);
+    swap_r8(regs.e);
     return 2;
 }
 
 int CPU::swap_h() {
-    swap_r8(h);
+    swap_r8(regs.h);
     return 2;
 }
 
 int CPU::swap_l() {
-    swap_r8(l);
+    swap_r8(regs.l);
     return 2;
 }
 
 int CPU::swap_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     swap_r8(val);
     mmu.write_byte(addr, val);
@@ -2368,42 +2365,42 @@ int CPU::swap_mhl() {
 }
 
 int CPU::swap_a() {
-    swap_r8(a);
+    swap_r8(regs.a);
     return 2;
 }
 
 int CPU::srl_b() {
-    srl_r8(b);
+    srl_r8(regs.b);
     return 2;
 }
 
 int CPU::srl_c() {
-    srl_r8(c);
+    srl_r8(regs.c);
     return 2;
 }
 
 int CPU::srl_d() {
-    srl_r8(d);
+    srl_r8(regs.d);
     return 2;
 }
 
 int CPU::srl_e() {
-    srl_r8(e);
+    srl_r8(regs.e);
     return 2;
 }
 
 int CPU::srl_h() {
-    srl_r8(h);
+    srl_r8(regs.h);
     return 2;
 }
 
 int CPU::srl_l() {
-    srl_r8(l);
+    srl_r8(regs.l);
     return 2;
 }
 
 int CPU::srl_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     srl_r8(val);
     mmu.write_byte(addr, val);
@@ -2411,42 +2408,42 @@ int CPU::srl_mhl() {
 }
 
 int CPU::srl_a() {
-    srl_r8(a);
+    srl_r8(regs.a);
     return 2;
 }
 
 int CPU::bit_0_b() {
-    bit_b_r8(0, b);
+    bit_b_r8(0, regs.b);
     return 2;
 }
 
 int CPU::bit_0_c() {
-    bit_b_r8(0, c);
+    bit_b_r8(0, regs.c);
     return 2;
 }
 
 int CPU::bit_0_d() {
-    bit_b_r8(0, d);
+    bit_b_r8(0, regs.d);
     return 2;
 }
 
 int CPU::bit_0_e() {
-    bit_b_r8(0, e);
+    bit_b_r8(0, regs.e);
     return 2;
 }
 
 int CPU::bit_0_h() {
-    bit_b_r8(0, h);
+    bit_b_r8(0, regs.h);
     return 2;
 }
 
 int CPU::bit_0_l() {
-    bit_b_r8(0, l);
+    bit_b_r8(0, regs.l);
     return 2;
 }
 
 int CPU::bit_0_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(0, val);
     mmu.write_byte(addr, val);
@@ -2454,42 +2451,42 @@ int CPU::bit_0_mhl() {
 }
 
 int CPU::bit_0_a() {
-    bit_b_r8(0, a);
+    bit_b_r8(0, regs.a);
     return 2;
 }
 
 int CPU::bit_1_b() {
-    bit_b_r8(1, b);
+    bit_b_r8(1, regs.b);
     return 2;
 }
 
 int CPU::bit_1_c() {
-    bit_b_r8(1, c);
+    bit_b_r8(1, regs.c);
     return 2;
 }
 
 int CPU::bit_1_d() {
-    bit_b_r8(1, d);
+    bit_b_r8(1, regs.d);
     return 2;
 }
 
 int CPU::bit_1_e() {
-    bit_b_r8(1, e);
+    bit_b_r8(1, regs.e);
     return 2;
 }
 
 int CPU::bit_1_h() {
-    bit_b_r8(1, h);
+    bit_b_r8(1, regs.h);
     return 2;
 }
 
 int CPU::bit_1_l() {
-    bit_b_r8(1, l);
+    bit_b_r8(1, regs.l);
     return 2;
 }
 
 int CPU::bit_1_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(1, val);
     mmu.write_byte(addr, val);
@@ -2497,42 +2494,42 @@ int CPU::bit_1_mhl() {
 }
 
 int CPU::bit_1_a() {
-    bit_b_r8(1, a);
+    bit_b_r8(1, regs.a);
     return 2;
 }
 
 int CPU::bit_2_b() {
-    bit_b_r8(2, b);
+    bit_b_r8(2, regs.b);
     return 2;
 }
 
 int CPU::bit_2_c() {
-    bit_b_r8(2, c);
+    bit_b_r8(2, regs.c);
     return 2;
 }
 
 int CPU::bit_2_d() {
-    bit_b_r8(2, d);
+    bit_b_r8(2, regs.d);
     return 2;
 }
 
 int CPU::bit_2_e() {
-    bit_b_r8(2, e);
+    bit_b_r8(2, regs.e);
     return 2;
 }
 
 int CPU::bit_2_h() {
-    bit_b_r8(2, h);
+    bit_b_r8(2, regs.h);
     return 2;
 }
 
 int CPU::bit_2_l() {
-    bit_b_r8(2, l);
+    bit_b_r8(2, regs.l);
     return 2;
 }
 
 int CPU::bit_2_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(2, val);
     mmu.write_byte(addr, val);
@@ -2540,42 +2537,42 @@ int CPU::bit_2_mhl() {
 }
 
 int CPU::bit_2_a() {
-    bit_b_r8(2, a);
+    bit_b_r8(2, regs.a);
     return 2;
 }
 
 int CPU::bit_3_b() {
-    bit_b_r8(3, b);
+    bit_b_r8(3, regs.b);
     return 2;
 }
 
 int CPU::bit_3_c() {
-    bit_b_r8(3, c);
+    bit_b_r8(3, regs.c);
     return 2;
 }
 
 int CPU::bit_3_d() {
-    bit_b_r8(3, d);
+    bit_b_r8(3, regs.d);
     return 2;
 }
 
 int CPU::bit_3_e() {
-    bit_b_r8(3, e);
+    bit_b_r8(3, regs.e);
     return 2;
 }
 
 int CPU::bit_3_h() {
-    bit_b_r8(3, h);
+    bit_b_r8(3, regs.h);
     return 2;
 }
 
 int CPU::bit_3_l() {
-    bit_b_r8(3, l);
+    bit_b_r8(3, regs.l);
     return 2;
 }
 
 int CPU::bit_3_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(3, val);
     mmu.write_byte(addr, val);
@@ -2583,42 +2580,42 @@ int CPU::bit_3_mhl() {
 }
 
 int CPU::bit_3_a() {
-    bit_b_r8(3, a);
+    bit_b_r8(3, regs.a);
     return 2;
 }
 
 int CPU::bit_4_b() {
-    bit_b_r8(4, b);
+    bit_b_r8(4, regs.b);
     return 2;
 }
 
 int CPU::bit_4_c() {
-    bit_b_r8(4, c);
+    bit_b_r8(4, regs.c);
     return 2;
 }
 
 int CPU::bit_4_d() {
-    bit_b_r8(4, d);
+    bit_b_r8(4, regs.d);
     return 2;
 }
 
 int CPU::bit_4_e() {
-    bit_b_r8(4, e);
+    bit_b_r8(4, regs.e);
     return 2;
 }
 
 int CPU::bit_4_h() {
-    bit_b_r8(4, h);
+    bit_b_r8(4, regs.h);
     return 2;
 }
 
 int CPU::bit_4_l() {
-    bit_b_r8(4, l);
+    bit_b_r8(4, regs.l);
     return 2;
 }
 
 int CPU::bit_4_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(4, val);
     mmu.write_byte(addr, val);
@@ -2626,42 +2623,42 @@ int CPU::bit_4_mhl() {
 }
 
 int CPU::bit_4_a() {
-    bit_b_r8(4, a);
+    bit_b_r8(4, regs.a);
     return 2;
 }
 
 int CPU::bit_5_b() {
-    bit_b_r8(5, b);
+    bit_b_r8(5, regs.b);
     return 2;
 }
 
 int CPU::bit_5_c() {
-    bit_b_r8(5, c);
+    bit_b_r8(5, regs.c);
     return 2;
 }
 
 int CPU::bit_5_d() {
-    bit_b_r8(5, d);
+    bit_b_r8(5, regs.d);
     return 2;
 }
 
 int CPU::bit_5_e() {
-    bit_b_r8(5, e);
+    bit_b_r8(5, regs.e);
     return 2;
 }
 
 int CPU::bit_5_h() {
-    bit_b_r8(5, h);
+    bit_b_r8(5, regs.h);
     return 2;
 }
 
 int CPU::bit_5_l() {
-    bit_b_r8(5, l);
+    bit_b_r8(5, regs.l);
     return 2;
 }
 
 int CPU::bit_5_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(5, val);
     mmu.write_byte(addr, val);
@@ -2669,42 +2666,42 @@ int CPU::bit_5_mhl() {
 }
 
 int CPU::bit_5_a() {
-    bit_b_r8(5, a);
+    bit_b_r8(5, regs.a);
     return 2;
 }
 
 int CPU::bit_6_b() {
-    bit_b_r8(6, b);
+    bit_b_r8(6, regs.b);
     return 2;
 }
 
 int CPU::bit_6_c() {
-    bit_b_r8(6, c);
+    bit_b_r8(6, regs.c);
     return 2;
 }
 
 int CPU::bit_6_d() {
-    bit_b_r8(6, d);
+    bit_b_r8(6, regs.d);
     return 2;
 }
 
 int CPU::bit_6_e() {
-    bit_b_r8(6, e);
+    bit_b_r8(6, regs.e);
     return 2;
 }
 
 int CPU::bit_6_h() {
-    bit_b_r8(6, h);
+    bit_b_r8(6, regs.h);
     return 2;
 }
 
 int CPU::bit_6_l() {
-    bit_b_r8(6, l);
+    bit_b_r8(6, regs.l);
     return 2;
 }
 
 int CPU::bit_6_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(6, val);
     mmu.write_byte(addr, val);
@@ -2712,42 +2709,42 @@ int CPU::bit_6_mhl() {
 }
 
 int CPU::bit_6_a() {
-    bit_b_r8(6, a);
+    bit_b_r8(6, regs.a);
     return 2;
 }
 
 int CPU::bit_7_b() {
-    bit_b_r8(7, b);
+    bit_b_r8(7, regs.b);
     return 2;
 }
 
 int CPU::bit_7_c() {
-    bit_b_r8(7, c);
+    bit_b_r8(7, regs.c);
     return 2;
 }
 
 int CPU::bit_7_d() {
-    bit_b_r8(7, d);
+    bit_b_r8(7, regs.d);
     return 2;
 }
 
 int CPU::bit_7_e() {
-    bit_b_r8(7, e);
+    bit_b_r8(7, regs.e);
     return 2;
 }
 
 int CPU::bit_7_h() {
-    bit_b_r8(7, h);
+    bit_b_r8(7, regs.h);
     return 2;
 }
 
 int CPU::bit_7_l() {
-    bit_b_r8(7, l);
+    bit_b_r8(7, regs.l);
     return 2;
 }
 
 int CPU::bit_7_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     bit_b_r8(7, val);
     mmu.write_byte(addr, val);
@@ -2755,42 +2752,42 @@ int CPU::bit_7_mhl() {
 }
 
 int CPU::bit_7_a() {
-    bit_b_r8(7, a);
+    bit_b_r8(7, regs.a);
     return 2;
 }
 
 int CPU::res_0_b() {
-    res_b_r8(0, b);
+    res_b_r8(0, regs.b);
     return 2;
 }
 
 int CPU::res_0_c() {
-    res_b_r8(0, c);
+    res_b_r8(0, regs.c);
     return 2;
 }
 
 int CPU::res_0_d() {
-    res_b_r8(0, d);
+    res_b_r8(0, regs.d);
     return 2;
 }
 
 int CPU::res_0_e() {
-    res_b_r8(0, e);
+    res_b_r8(0, regs.e);
     return 2;
 }
 
 int CPU::res_0_h() {
-    res_b_r8(0, h);
+    res_b_r8(0, regs.h);
     return 2;
 }
 
 int CPU::res_0_l() {
-    res_b_r8(0, l);
+    res_b_r8(0, regs.l);
     return 2;
 }
 
 int CPU::res_0_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(0, val);
     mmu.write_byte(addr, val);
@@ -2798,42 +2795,42 @@ int CPU::res_0_mhl() {
 }
 
 int CPU::res_0_a() {
-    res_b_r8(0, a);
+    res_b_r8(0, regs.a);
     return 2;
 }
 
 int CPU::res_1_b() {
-    res_b_r8(1, b);
+    res_b_r8(1, regs.b);
     return 2;
 }
 
 int CPU::res_1_c() {
-    res_b_r8(1, c);
+    res_b_r8(1, regs.c);
     return 2;
 }
 
 int CPU::res_1_d() {
-    res_b_r8(1, d);
+    res_b_r8(1, regs.d);
     return 2;
 }
 
 int CPU::res_1_e() {
-    res_b_r8(1, e);
+    res_b_r8(1, regs.e);
     return 2;
 }
 
 int CPU::res_1_h() {
-    res_b_r8(1, h);
+    res_b_r8(1, regs.h);
     return 2;
 }
 
 int CPU::res_1_l() {
-    res_b_r8(1, l);
+    res_b_r8(1, regs.l);
     return 2;
 }
 
 int CPU::res_1_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(1, val);
     mmu.write_byte(addr, val);
@@ -2841,42 +2838,42 @@ int CPU::res_1_mhl() {
 }
 
 int CPU::res_1_a() {
-    res_b_r8(1, a);
+    res_b_r8(1, regs.a);
     return 2;
 }
 
 int CPU::res_2_b() {
-    res_b_r8(2, b);
+    res_b_r8(2, regs.b);
     return 2;
 }
 
 int CPU::res_2_c() {
-    res_b_r8(2, c);
+    res_b_r8(2, regs.c);
     return 2;
 }
 
 int CPU::res_2_d() {
-    res_b_r8(2, d);
+    res_b_r8(2, regs.d);
     return 2;
 }
 
 int CPU::res_2_e() {
-    res_b_r8(2, e);
+    res_b_r8(2, regs.e);
     return 2;
 }
 
 int CPU::res_2_h() {
-    res_b_r8(2, h);
+    res_b_r8(2, regs.h);
     return 2;
 }
 
 int CPU::res_2_l() {
-    res_b_r8(2, l);
+    res_b_r8(2, regs.l);
     return 2;
 }
 
 int CPU::res_2_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(2, val);
     mmu.write_byte(addr, val);
@@ -2884,42 +2881,42 @@ int CPU::res_2_mhl() {
 }
 
 int CPU::res_2_a() {
-    res_b_r8(2, a);
+    res_b_r8(2, regs.a);
     return 2;
 }
 
 int CPU::res_3_b() {
-    res_b_r8(3, b);
+    res_b_r8(3, regs.b);
     return 2;
 }
 
 int CPU::res_3_c() {
-    res_b_r8(3, c);
+    res_b_r8(3, regs.c);
     return 2;
 }
 
 int CPU::res_3_d() {
-    res_b_r8(3, d);
+    res_b_r8(3, regs.d);
     return 2;
 }
 
 int CPU::res_3_e() {
-    res_b_r8(3, e);
+    res_b_r8(3, regs.e);
     return 2;
 }
 
 int CPU::res_3_h() {
-    res_b_r8(3, h);
+    res_b_r8(3, regs.h);
     return 2;
 }
 
 int CPU::res_3_l() {
-    res_b_r8(3, l);
+    res_b_r8(3, regs.l);
     return 2;
 }
 
 int CPU::res_3_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(3, val);
     mmu.write_byte(addr, val);
@@ -2927,42 +2924,42 @@ int CPU::res_3_mhl() {
 }
 
 int CPU::res_3_a() {
-    res_b_r8(3, a);
+    res_b_r8(3, regs.a);
     return 2;
 }
 
 int CPU::res_4_b() {
-    res_b_r8(4, b);
+    res_b_r8(4, regs.b);
     return 2;
 }
 
 int CPU::res_4_c() {
-    res_b_r8(4, c);
+    res_b_r8(4, regs.c);
     return 2;
 }
 
 int CPU::res_4_d() {
-    res_b_r8(4, d);
+    res_b_r8(4, regs.d);
     return 2;
 }
 
 int CPU::res_4_e() {
-    res_b_r8(4, e);
+    res_b_r8(4, regs.e);
     return 2;
 }
 
 int CPU::res_4_h() {
-    res_b_r8(4, h);
+    res_b_r8(4, regs.h);
     return 2;
 }
 
 int CPU::res_4_l() {
-    res_b_r8(4, l);
+    res_b_r8(4, regs.l);
     return 2;
 }
 
 int CPU::res_4_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(4, val);
     mmu.write_byte(addr, val);
@@ -2970,42 +2967,42 @@ int CPU::res_4_mhl() {
 }
 
 int CPU::res_4_a() {
-    res_b_r8(4, a);
+    res_b_r8(4, regs.a);
     return 2;
 }
 
 int CPU::res_5_b() {
-    res_b_r8(5, b);
+    res_b_r8(5, regs.b);
     return 2;
 }
 
 int CPU::res_5_c() {
-    res_b_r8(5, c);
+    res_b_r8(5, regs.c);
     return 2;
 }
 
 int CPU::res_5_d() {
-    res_b_r8(5, d);
+    res_b_r8(5, regs.d);
     return 2;
 }
 
 int CPU::res_5_e() {
-    res_b_r8(5, e);
+    res_b_r8(5, regs.e);
     return 2;
 }
 
 int CPU::res_5_h() {
-    res_b_r8(5, h);
+    res_b_r8(5, regs.h);
     return 2;
 }
 
 int CPU::res_5_l() {
-    res_b_r8(5, l);
+    res_b_r8(5, regs.l);
     return 2;
 }
 
 int CPU::res_5_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(5, val);
     mmu.write_byte(addr, val);
@@ -3013,42 +3010,42 @@ int CPU::res_5_mhl() {
 }
 
 int CPU::res_5_a() {
-    res_b_r8(5, a);
+    res_b_r8(5, regs.a);
     return 2;
 }
 
 int CPU::res_6_b() {
-    res_b_r8(6, b);
+    res_b_r8(6, regs.b);
     return 2;
 }
 
 int CPU::res_6_c() {
-    res_b_r8(6, c);
+    res_b_r8(6, regs.c);
     return 2;
 }
 
 int CPU::res_6_d() {
-    res_b_r8(6, d);
+    res_b_r8(6, regs.d);
     return 2;
 }
 
 int CPU::res_6_e() {
-    res_b_r8(6, e);
+    res_b_r8(6, regs.e);
     return 2;
 }
 
 int CPU::res_6_h() {
-    res_b_r8(6, h);
+    res_b_r8(6, regs.h);
     return 2;
 }
 
 int CPU::res_6_l() {
-    res_b_r8(6, l);
+    res_b_r8(6, regs.l);
     return 2;
 }
 
 int CPU::res_6_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(6, val);
     mmu.write_byte(addr, val);
@@ -3056,42 +3053,42 @@ int CPU::res_6_mhl() {
 }
 
 int CPU::res_6_a() {
-    res_b_r8(6, a);
+    res_b_r8(6, regs.a);
     return 2;
 }
 
 int CPU::res_7_b() {
-    res_b_r8(7, b);
+    res_b_r8(7, regs.b);
     return 2;
 }
 
 int CPU::res_7_c() {
-    res_b_r8(7, c);
+    res_b_r8(7, regs.c);
     return 2;
 }
 
 int CPU::res_7_d() {
-    res_b_r8(7, d);
+    res_b_r8(7, regs.d);
     return 2;
 }
 
 int CPU::res_7_e() {
-    res_b_r8(7, e);
+    res_b_r8(7, regs.e);
     return 2;
 }
 
 int CPU::res_7_h() {
-    res_b_r8(7, h);
+    res_b_r8(7, regs.h);
     return 2;
 }
 
 int CPU::res_7_l() {
-    res_b_r8(7, l);
+    res_b_r8(7, regs.l);
     return 2;
 }
 
 int CPU::res_7_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     res_b_r8(7, val);
     mmu.write_byte(addr, val);
@@ -3099,42 +3096,42 @@ int CPU::res_7_mhl() {
 }
 
 int CPU::res_7_a() {
-    res_b_r8(7, a);
+    res_b_r8(7, regs.a);
     return 2;
 }
 
 int CPU::set_0_b() {
-    set_b_r8(0, b);
+    set_b_r8(0, regs.b);
     return 2;
 }
 
 int CPU::set_0_c() {
-    set_b_r8(0, c);
+    set_b_r8(0, regs.c);
     return 2;
 }
 
 int CPU::set_0_d() {
-    set_b_r8(0, d);
+    set_b_r8(0, regs.d);
     return 2;
 }
 
 int CPU::set_0_e() {
-    set_b_r8(0, e);
+    set_b_r8(0, regs.e);
     return 2;
 }
 
 int CPU::set_0_h() {
-    set_b_r8(0, h);
+    set_b_r8(0, regs.h);
     return 2;
 }
 
 int CPU::set_0_l() {
-    set_b_r8(0, l);
+    set_b_r8(0, regs.l);
     return 2;
 }
 
 int CPU::set_0_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(0, val);
     mmu.write_byte(addr, val);
@@ -3142,42 +3139,42 @@ int CPU::set_0_mhl() {
 }
 
 int CPU::set_0_a() {
-    set_b_r8(0, a);
+    set_b_r8(0, regs.a);
     return 2;
 }
 
 int CPU::set_1_b() {
-    set_b_r8(1, b);
+    set_b_r8(1, regs.b);
     return 2;
 }
 
 int CPU::set_1_c() {
-    set_b_r8(1, c);
+    set_b_r8(1, regs.c);
     return 2;
 }
 
 int CPU::set_1_d() {
-    set_b_r8(1, d);
+    set_b_r8(1, regs.d);
     return 2;
 }
 
 int CPU::set_1_e() {
-    set_b_r8(1, e);
+    set_b_r8(1, regs.e);
     return 2;
 }
 
 int CPU::set_1_h() {
-    set_b_r8(1, h);
+    set_b_r8(1, regs.h);
     return 2;
 }
 
 int CPU::set_1_l() {
-    set_b_r8(1, l);
+    set_b_r8(1, regs.l);
     return 2;
 }
 
 int CPU::set_1_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(1, val);
     mmu.write_byte(addr, val);
@@ -3185,42 +3182,42 @@ int CPU::set_1_mhl() {
 }
 
 int CPU::set_1_a() {
-    set_b_r8(1, a);
+    set_b_r8(1, regs.a);
     return 2;
 }
 
 int CPU::set_2_b() {
-    set_b_r8(2, b);
+    set_b_r8(2, regs.b);
     return 2;
 }
 
 int CPU::set_2_c() {
-    set_b_r8(2, c);
+    set_b_r8(2, regs.c);
     return 2;
 }
 
 int CPU::set_2_d() {
-    set_b_r8(2, d);
+    set_b_r8(2, regs.d);
     return 2;
 }
 
 int CPU::set_2_e() {
-    set_b_r8(2, e);
+    set_b_r8(2, regs.e);
     return 2;
 }
 
 int CPU::set_2_h() {
-    set_b_r8(2, h);
+    set_b_r8(2, regs.h);
     return 2;
 }
 
 int CPU::set_2_l() {
-    set_b_r8(2, l);
+    set_b_r8(2, regs.l);
     return 2;
 }
 
 int CPU::set_2_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(2, val);
     mmu.write_byte(addr, val);
@@ -3228,42 +3225,42 @@ int CPU::set_2_mhl() {
 }
 
 int CPU::set_2_a() {
-    set_b_r8(2, a);
+    set_b_r8(2, regs.a);
     return 2;
 }
 
 int CPU::set_3_b() {
-    set_b_r8(3, b);
+    set_b_r8(3, regs.b);
     return 2;
 }
 
 int CPU::set_3_c() {
-    set_b_r8(3, c);
+    set_b_r8(3, regs.c);
     return 2;
 }
 
 int CPU::set_3_d() {
-    set_b_r8(3, d);
+    set_b_r8(3, regs.d);
     return 2;
 }
 
 int CPU::set_3_e() {
-    set_b_r8(3, e);
+    set_b_r8(3, regs.e);
     return 2;
 }
 
 int CPU::set_3_h() {
-    set_b_r8(3, h);
+    set_b_r8(3, regs.h);
     return 2;
 }
 
 int CPU::set_3_l() {
-    set_b_r8(3, l);
+    set_b_r8(3, regs.l);
     return 2;
 }
 
 int CPU::set_3_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(3, val);
     mmu.write_byte(addr, val);
@@ -3271,42 +3268,42 @@ int CPU::set_3_mhl() {
 }
 
 int CPU::set_3_a() {
-    set_b_r8(3, a);
+    set_b_r8(3, regs.a);
     return 2;
 }
 
 int CPU::set_4_b() {
-    set_b_r8(4, b);
+    set_b_r8(4, regs.b);
     return 2;
 }
 
 int CPU::set_4_c() {
-    set_b_r8(4, c);
+    set_b_r8(4, regs.c);
     return 2;
 }
 
 int CPU::set_4_d() {
-    set_b_r8(4, d);
+    set_b_r8(4, regs.d);
     return 2;
 }
 
 int CPU::set_4_e() {
-    set_b_r8(4, e);
+    set_b_r8(4, regs.e);
     return 2;
 }
 
 int CPU::set_4_h() {
-    set_b_r8(4, h);
+    set_b_r8(4, regs.h);
     return 2;
 }
 
 int CPU::set_4_l() {
-    set_b_r8(4, l);
+    set_b_r8(4, regs.l);
     return 2;
 }
 
 int CPU::set_4_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(4, val);
     mmu.write_byte(addr, val);
@@ -3314,42 +3311,42 @@ int CPU::set_4_mhl() {
 }
 
 int CPU::set_4_a() {
-    set_b_r8(4, a);
+    set_b_r8(4, regs.a);
     return 2;
 }
 
 int CPU::set_5_b() {
-    set_b_r8(5, b);
+    set_b_r8(5, regs.b);
     return 2;
 }
 
 int CPU::set_5_c() {
-    set_b_r8(5, c);
+    set_b_r8(5, regs.c);
     return 2;
 }
 
 int CPU::set_5_d() {
-    set_b_r8(5, d);
+    set_b_r8(5, regs.d);
     return 2;
 }
 
 int CPU::set_5_e() {
-    set_b_r8(5, e);
+    set_b_r8(5, regs.e);
     return 2;
 }
 
 int CPU::set_5_h() {
-    set_b_r8(5, h);
+    set_b_r8(5, regs.h);
     return 2;
 }
 
 int CPU::set_5_l() {
-    set_b_r8(5, l);
+    set_b_r8(5, regs.l);
     return 2;
 }
 
 int CPU::set_5_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(5, val);
     mmu.write_byte(addr, val);
@@ -3357,42 +3354,42 @@ int CPU::set_5_mhl() {
 }
 
 int CPU::set_5_a() {
-    set_b_r8(5, a);
+    set_b_r8(5, regs.a);
     return 2;
 }
 
 int CPU::set_6_b() {
-    set_b_r8(6, b);
+    set_b_r8(6, regs.b);
     return 2;
 }
 
 int CPU::set_6_c() {
-    set_b_r8(6, c);
+    set_b_r8(6, regs.c);
     return 2;
 }
 
 int CPU::set_6_d() {
-    set_b_r8(6, d);
+    set_b_r8(6, regs.d);
     return 2;
 }
 
 int CPU::set_6_e() {
-    set_b_r8(6, e);
+    set_b_r8(6, regs.e);
     return 2;
 }
 
 int CPU::set_6_h() {
-    set_b_r8(6, h);
+    set_b_r8(6, regs.h);
     return 2;
 }
 
 int CPU::set_6_l() {
-    set_b_r8(6, l);
+    set_b_r8(6, regs.l);
     return 2;
 }
 
 int CPU::set_6_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(6, val);
     mmu.write_byte(addr, val);
@@ -3400,42 +3397,42 @@ int CPU::set_6_mhl() {
 }
 
 int CPU::set_6_a() {
-    set_b_r8(6, a);
+    set_b_r8(6, regs.a);
     return 2;
 }
 
 int CPU::set_7_b() {
-    set_b_r8(7, b);
+    set_b_r8(7, regs.b);
     return 2;
 }
 
 int CPU::set_7_c() {
-    set_b_r8(7, c);
+    set_b_r8(7, regs.c);
     return 2;
 }
 
 int CPU::set_7_d() {
-    set_b_r8(7, d);
+    set_b_r8(7, regs.d);
     return 2;
 }
 
 int CPU::set_7_e() {
-    set_b_r8(7, e);
+    set_b_r8(7, regs.e);
     return 2;
 }
 
 int CPU::set_7_h() {
-    set_b_r8(7, h);
+    set_b_r8(7, regs.h);
     return 2;
 }
 
 int CPU::set_7_l() {
-    set_b_r8(7, l);
+    set_b_r8(7, regs.l);
     return 2;
 }
 
 int CPU::set_7_mhl() {
-    uint16_t addr = (h << 8) + l;
+    uint16_t addr = (regs.h << 8) + regs.l;
     uint8_t val = mmu.read_byte(addr);
     set_b_r8(7, val);
     mmu.write_byte(addr, val);
@@ -3443,6 +3440,6 @@ int CPU::set_7_mhl() {
 }
 
 int CPU::set_7_a() {
-    set_b_r8(7, a);
+    set_b_r8(7, regs.a);
     return 2;
 }

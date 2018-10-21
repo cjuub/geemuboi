@@ -65,7 +65,8 @@ int main(int argc, char* argv[]) {
     GPU gpu(renderer);
     Input input;
     MMU mmu(gpu, input, args::get(bios), args::get(rom)); 
-    CPU cpu(mmu);
+    CPU::Registers regs{};
+    CPU cpu(mmu, regs);
 
     LOG_INIT(cpu, mmu, gpu, bps);
 

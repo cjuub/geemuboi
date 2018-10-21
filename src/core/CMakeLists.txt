@@ -17,5 +17,5 @@ target_compile_options(geemuboi_core
 
 target_include_directories(geemuboi_core
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/include/geemuboi
 )

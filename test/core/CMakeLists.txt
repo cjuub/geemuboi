@@ -21,5 +21,10 @@ target_compile_options(test_geemuboi_core
         -Wold-style-cast
 )
 
+target_include_directories(test_geemuboi_core
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/include/test
+)
+
 include(GoogleTest)
 gtest_discover_tests(test_geemuboi_core)
