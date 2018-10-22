@@ -1,6 +1,6 @@
 project(geemuboi_core)
 
-add_library(geemuboi_core STATIC
+add_library(${PROJECT_NAME} STATIC
     cpu_factory.cpp
     cpu.cpp
     gpu.cpp
@@ -8,7 +8,7 @@ add_library(geemuboi_core STATIC
     mmu.cpp
 )
 
-target_compile_options(geemuboi_core
+target_compile_options(${PROJECT_NAME}
     PRIVATE 
         -Wall
         -Wextra
@@ -16,7 +16,7 @@ target_compile_options(geemuboi_core
         -Wold-style-cast
 )
 
-target_include_directories(geemuboi_core
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include/geemuboi
 )

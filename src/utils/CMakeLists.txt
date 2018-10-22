@@ -1,10 +1,10 @@
 project(geemuboi_utils)
 
-add_library(geemuboi_utils STATIC
+add_library(${PROJECT_NAME} STATIC
     logger.cpp
 )
 
-target_compile_options(geemuboi_utils
+target_compile_options(${PROJECT_NAME}
     PRIVATE 
         -Wall
         -Wextra
@@ -12,7 +12,7 @@ target_compile_options(geemuboi_utils
         -Wold-style-cast
 )
 
-target_include_directories(geemuboi_utils
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include/geemuboi
 )

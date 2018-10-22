@@ -1,17 +1,17 @@
-project(test_geemuboi_view)
+project(atest_geemuboi_view)
 
-add_executable(test_geemuboi_view
+add_executable(${PROJECT_NAME}
     test_view.cpp
 )
 
-target_link_libraries(test_geemuboi_view
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         geemuboi_view
         gtest
         gtest_main
 )
 
-target_compile_options(test_geemuboi_view 
+target_compile_options(${PROJECT_NAME} 
     PRIVATE 
         -Wall
         -Wextra
@@ -20,4 +20,4 @@ target_compile_options(test_geemuboi_view
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_geemuboi_view)
+gtest_discover_tests(${PROJECT_NAME})

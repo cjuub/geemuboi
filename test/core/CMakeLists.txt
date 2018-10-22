@@ -1,10 +1,10 @@
 project(test_geemuboi_core)
 
-add_executable(test_geemuboi_core
+add_executable(${PROJECT_NAME}
     test_cpu.cpp
 )
 
-target_link_libraries(test_geemuboi_core
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         geemuboi_core
         geemuboi_utils
@@ -13,7 +13,7 @@ target_link_libraries(test_geemuboi_core
         gmock
 )
 
-target_compile_options(test_geemuboi_core 
+target_compile_options(${PROJECT_NAME} 
     PRIVATE 
         -Wall
         -Wextra
@@ -21,10 +21,10 @@ target_compile_options(test_geemuboi_core
         -Wold-style-cast
 )
 
-target_include_directories(test_geemuboi_core
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include/test
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_geemuboi_core)
+gtest_discover_tests(${PROJECT_NAME})

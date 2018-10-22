@@ -1,17 +1,17 @@
 project(geemuboi_input)
 
-add_library(geemuboi_input STATIC
+add_library(${PROJECT_NAME} STATIC
     sdl_keyboard.cpp
 )
 
 find_package(SDL2 REQUIRED)
 
-target_link_libraries(geemuboi_input
+target_link_libraries(${PROJECT_NAME}
     PUBLIC
         SDL2::SDL2
 )
 
-target_compile_options(geemuboi_input
+target_compile_options(${PROJECT_NAME}
     PRIVATE 
         -Wall
         -Wextra
@@ -19,7 +19,7 @@ target_compile_options(geemuboi_input
         -Wold-style-cast
 )
 
-target_include_directories(geemuboi_input
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include/geemuboi
 )

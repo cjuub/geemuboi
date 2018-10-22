@@ -1,6 +1,6 @@
 project(geemuboi_application)
 
-add_executable(geemuboi_application
+add_executable(${PROJECT_NAME}
     geemuboi.cpp
 )
 
@@ -18,7 +18,7 @@ if(NOT args_POPULATED)
   add_subdirectory(${args_SOURCE_DIR} ${args_BINARY_DIR})
 endif()
 
-target_link_libraries(geemuboi_application
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         geemuboi_core
         geemuboi_view
@@ -28,7 +28,7 @@ target_link_libraries(geemuboi_application
         args
 )
 
-target_compile_options(geemuboi_application 
+target_compile_options(${PROJECT_NAME}
     PRIVATE 
         -Wall
         -Wextra
