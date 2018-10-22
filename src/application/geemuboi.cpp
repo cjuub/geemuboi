@@ -1,10 +1,14 @@
-#include "core/cpu.h"
+#include "core/cpu_factory.h"
+#include "core/icpu.h"
 #include "core/gpu.h"
 #include "core/input.h"
 #include "core/mmu.h"
 #include "view/sdl_renderer.h"
 #include "input/sdl_keyboard.h"
 #include "utils/logger.h"
+
+// TODO remove with logger
+#include "core/cpu.h"
 
 #include <iostream>
 #include <string>
@@ -16,6 +20,7 @@
 #include <args.hxx>
 
 const double MILLIS_PER_FRAME = 1000 / 60;
+
 
 int main(int argc, char* argv[]) {
     using namespace std::chrono;
@@ -65,10 +70,10 @@ int main(int argc, char* argv[]) {
     GPU gpu(renderer);
     Input input;
     MMU mmu(gpu, input, args::get(bios), args::get(rom)); 
-    CPU::Registers regs{};
-    CPU cpu(mmu, regs);
+    ICpu::Registers regs{};
+    auto cpu{create_cpu(mmu, regs)};
 
-    LOG_INIT(cpu, mmu, gpu, bps);
+    LOG_INIT(*static_cast<CPU*>(cpu.get()), mmu, gpu, bps);
 
     SDLKeyboard joypad(input);
 
@@ -81,7 +86,7 @@ int main(int argc, char* argv[]) {
         int frame_cycles = 0;
         auto frame_start_time = clock.now();
         while (frame_cycles <= GPU::CYCLES_PER_FRAME) {
-            int cycles = cpu.execute();
+            int cycles = cpu->execute();
             gpu.step(cycles);
             frame_cycles += cycles;
         }

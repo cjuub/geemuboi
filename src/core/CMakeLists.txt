@@ -1,6 +1,7 @@
 project(geemuboi_core)
 
 add_library(geemuboi_core STATIC
+    cpu_factory.cpp
     cpu.cpp
     gpu.cpp
     input.cpp
