@@ -1,6 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <stdexcept>
+
+
+class NotImplementedMemoryRegionException: public std::logic_error {
+public:
+    NotImplementedMemoryRegionException() 
+        : std::logic_error("An unimplemented memory region access was made.") {};
+};
+
 
 class IMmu {
 public:

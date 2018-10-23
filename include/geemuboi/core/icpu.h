@@ -1,6 +1,22 @@
 #pragma once
 
 #include <cstdint>
+#include <stdexcept>
+
+
+class NotImplementedInstructionException : public std::logic_error {
+public:
+    NotImplementedInstructionException()
+        : std::logic_error("An unimplemented instruction was called.") {};
+};
+
+
+class UndefinedInstructionException: public std::logic_error {
+public:
+    UndefinedInstructionException() 
+        : std::logic_error("An undefined instruction was called.") {};
+};
+
 
 class ICpu {
 public:

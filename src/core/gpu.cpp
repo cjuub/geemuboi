@@ -1,6 +1,5 @@
 #include "core/gpu.h"
 
-#include "utils/logger.h"
 
 GPU::GPU(Renderer& renderer_in) : vram{},
     oam{},
@@ -131,7 +130,6 @@ void GPU::render_sprites() {
 
             // TODO PRINT TILE SEE IF CORRECT
 
-            //LOG("pal= ");
 
             for (int x = 0; x != TILE_WIDTH_PIXELS; ++x) {
                 //uint8_t low = vram[tile_set_addr + TILE_SIZE * sprite.tile_nbr + tile_y * 2 + x * 2];
@@ -150,7 +148,6 @@ void GPU::render_sprites() {
                 uint8_t color = high + low;
                 color = (palette >> (color * 2)) & 0x3;
 
-                //LOG("%d ", color);
 
                 uint32_t pixel = 0;
                 switch (color) {
@@ -162,8 +159,6 @@ void GPU::render_sprites() {
 
                 framebuffer[sprite.x - 8 + x + curr_line * Renderer::SCREEN_WIDTH] = pixel;
             }
-
-            //LOG("\n");
         }
     }
 }
@@ -182,8 +177,6 @@ uint8_t GPU::read_byte_oam(uint16_t addr) const {
 }
 
 void GPU::write_byte_oam(uint16_t addr, uint8_t val) {
-    LOG("addr=%d val=%d\n", addr, val);
-    //exit(0);
     oam[addr] = val;
 }
 

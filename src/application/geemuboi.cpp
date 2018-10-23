@@ -1,3 +1,4 @@
+#include "core/cpu_debug_decorator.h"
 #include "core/cpu_factory.h"
 #include "core/icpu.h"
 #include "core/gpu.h"
@@ -5,12 +6,9 @@
 #include "core/mmu.h"
 #include "view/sdl_renderer.h"
 #include "input/sdl_keyboard.h"
-#include "utils/logger.h"
-
-// TODO remove with logger
-#include "core/cpu.h"
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <chrono>
 #include <thread>
@@ -70,10 +68,13 @@ int main(int argc, char* argv[]) {
     GPU gpu(renderer);
     Input input;
     MMU mmu(gpu, input, args::get(bios), args::get(rom)); 
-    ICpu::Registers regs{};
-    auto cpu{create_cpu(mmu, regs)};
 
-    LOG_INIT(*static_cast<CPU*>(cpu.get()), mmu, gpu, bps);
+    ICpu::Registers regs{};
+    std::unique_ptr<ICpu> cpu{
+        std::make_unique<CpuDebugDecorator>(std::move(create_cpu(mmu, regs)), 
+        mmu,
+        regs, 
+        bps)};
 
     SDLKeyboard joypad(input);
 

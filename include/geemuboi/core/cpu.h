@@ -3,23 +3,19 @@
 
 #include "core/icpu.h"
 #include "core/immu.h"
-#include "utils/logger.h"
 
 #include <cstdint>
 #include <vector>
 #include <functional>
-#include <string>
 
 
 class CPU : public ICpu {
 public:
+    CPU(IMmu& mmu_in);
     CPU(IMmu& mmu_in, Registers& regs_in);
 
     int execute();
     unsigned get_cycles_executed();
-    std::string print_context() const;
-    std::string print_stack(int before, int after) const;
-    std::string print_curr_instr(int before, int after) const;
 private:
     // Generalized CPU functionality
     void dec_r8(uint8_t& r);
@@ -600,10 +596,6 @@ private:
     const std::vector<std::function<int()>> instructions;
    
     unsigned cycles;
-
-    std::vector<std::string> instr_text;
-
-    bool paused;
 };
 
 inline void CPU::dec_r8(uint8_t& r) {

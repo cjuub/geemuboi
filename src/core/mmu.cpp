@@ -1,7 +1,5 @@
 #include "core/mmu.h"
 
-#include "utils/logger.h"
-
 #include <fstream>
 #include <iostream>
 
@@ -49,15 +47,13 @@ uint8_t MMU::read_byte(uint16_t addr) {
     case AREA_ROM0: return rom[addr];
     case AREA_ROM1: return rom[addr];
     case AREA_VRAM: 
-        LOG("Unimplemented read_byte:AREA_WRAM: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     case AREA_ERAM: return eram[addr & 0x1FFF];
     case AREA_WRAM: return wram[addr & 0x1FFF];
     case AREA_OAM:
         return gpu.read_byte_oam(addr - 0xFE00);
     case AREA_UNUSED: 
-        LOG("Unimplemented read_byte:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     case AREA_IO:
         switch (addr) {
         case JOYPAD_REG: return input.get_buttons_pressed();
@@ -68,16 +64,13 @@ uint8_t MMU::read_byte(uint16_t addr) {
         case GPU_REG_OBJ_PALETTE_0: return gpu.get_obj_palette(0);
         case GPU_REG_OBJ_PALETTE_1: return gpu.get_obj_palette(1);
         default: 
-            LOG("Unimplemented read_byte:AREA_IO: %x\n", static_cast<unsigned>(addr));
-            return 0;
+            throw NotImplementedMemoryRegionException();
         }
     case AREA_HRAM: return hram[addr & 0x7F];
     case AREA_IE_REG: 
-        LOG("Unimplemented read_byte:AREA_IE_REG: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     default: 
-        LOG("Unimplemented read_byte:INVALID: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     }
 }
 
@@ -87,27 +80,20 @@ uint16_t MMU::read_word(uint16_t addr) {
     case AREA_ROM0: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_ROM1: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_VRAM: 
-        LOG("Unimplemented read_word:AREA_WRAM: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     case AREA_ERAM: return eram[addr & 0x2000] + ((eram[addr + 1] & 0x2000) << 8);
     case AREA_WRAM: return wram[addr & 0x2000] + ((wram[addr + 1] & 0x2000) << 8);
     case AREA_OAM: 
         return (gpu.read_byte_oam(addr - 0xFE00 + 1) << 8) + gpu.read_byte_oam(addr - 0xFE00);
-        //LOG("Unimplemented read_word:AREA_OAM: %x\n", static_cast<unsigned>(addr));
-        //return 0;
     case AREA_UNUSED: 
-        LOG("Unimplemented read_word:AREA_UNUSED: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     case AREA_IO: 
-        LOG("Unimplemented read_word:AREA_IO: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     case AREA_HRAM: return hram[addr & 0x7F] + (hram[(addr & 0x7F) + 1] << 8);
     case AREA_IE_REG: 
-        LOG("Unimplemented read_word:AREA_IE_REG: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     default: 
-        LOG("Unimplemented read_word:INVALID: %x\n", static_cast<unsigned>(addr));
-        return 0;
+        throw NotImplementedMemoryRegionException();
     }
 }
 
@@ -168,7 +154,6 @@ int MMU::get_area(uint16_t addr) {
     if (addr < 0x4000) {
         if (in_bios && addr == 0x100) {
             in_bios = false;
-            LOG("Exit BIOS\n");
         }
         if (addr < 0x100 && in_bios) {
             return AREA_BIOS;

@@ -22,7 +22,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         geemuboi_core
         geemuboi_view
-        geemuboi_utils
         geemuboi_input
         SDL2::SDL2
         args

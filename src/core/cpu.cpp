@@ -1,8 +1,5 @@
 #include "core/cpu.h"
 
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 
 CPU::CPU(IMmu& mmu_in, Registers& regs_in) : mmu(mmu_in), 
     regs(regs_in),
@@ -520,76 +517,18 @@ CPU::CPU(IMmu& mmu_in, Registers& regs_in) : mmu(mmu_in),
         std::bind(&CPU::set_7_mhl, this),
         std::bind(&CPU::set_7_a, this)
     },
-    cycles{},
-    instr_text{},
-    paused(false)
-{
-    std::ifstream ifs("instr.txt");
+    cycles{} {}
 
-    std::string str;
-    while (ifs >> str) {
-        instr_text.push_back(str);
-    }
-}
 
 int CPU::execute() {
-    LOG_BREAKPOINT(regs.pc);
     return instructions[mmu.read_byte(regs.pc++)]();
 }
+
 
 unsigned CPU::get_cycles_executed() {
     return cycles;
 }
 
-std::string CPU::print_context() const {
-    std::stringstream ss;
-
-    ss << std::hex << std::setfill('0');
-
-    ss << "A: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.a) << " ";
-    ss << "F: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.f) << " ";
-    ss << "PC: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.pc) << std::endl;
-
-    ss << "B: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.b) << " ";
-    ss << "C: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.c) << " ";
-    ss << "SP: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.sp) << std::endl;
-
-    ss << "D: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.d) << " ";
-    ss << "E: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.e) << std::endl;
-
-    ss << "H: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.h) << " ";
-    ss << "L: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.l) << std::endl;
-
-    return ss.str();
-}
-
-std::string CPU::print_stack(int before, int after) const {
-    std::stringstream ss;
-    ss << std::hex;
-    before = (regs.sp + before < 0) ? -regs.sp : before;
-    after = (regs.sp + after > 0xFFFF) ? 0xFFFF - regs.sp : after;
-    for (int i = before; i != after; ++i) {
-        ss << ((i == 0) ? ">" : " ");
-        ss << "0x" << static_cast<unsigned>(regs.sp + i * 2) << ": ";
-        ss << "0x" << static_cast<unsigned>(mmu.read_word(regs.sp + i * 2)) << std::endl;
-    }
-
-    return ss.str();
-}
-
-std::string CPU::print_curr_instr(int before, int after) const {
-    std::stringstream ss;
-    ss << std::hex;
-    before = (regs.pc + before < 0) ? -regs.pc : before;
-    after = (regs.pc + after > 0xFFFF) ? 0xFFFF - regs.pc : after;
-    for (int i = before; i != after; ++i) {
-        ss << ((i == 0) ? ">" : " ");
-        ss << "0x" << static_cast<unsigned>(regs.pc + i) << ": ";
-        ss << instr_text[mmu.read_byte(regs.pc + i)] << std::endl;
-    }
-
-    return ss.str();
-}
 
 // 0x00
 int CPU::nop() {
@@ -1299,9 +1238,7 @@ int CPU::ld_mhl_l() {
 }
 
 int CPU::halt() {
-    // TODO
-    LOG("WARNING: Called unimplemented function halt()\n");
-    LOG_ALL();
+    throw NotImplementedInstructionException();
     return 1;
 }
 
@@ -1867,8 +1804,7 @@ int CPU::reti() {
     regs.pc = mmu.read_word(regs.sp);
     regs.sp += 2;
     // TODO enable interrupts
-    LOG("WARNING: Called unimplemented instruction reti()\n");
-    LOG_ALL();
+    throw NotImplementedInstructionException();
     return 4;
 }
 
@@ -1997,8 +1933,7 @@ int CPU::ld_a_mc() {
 
 int CPU::di() {
     // TODO
-    LOG("WARNING: Called unimplemented function di()\n");
-    LOG_ALL();
+    throw NotImplementedInstructionException();
     return 1;
 }
 //
@@ -2046,8 +1981,7 @@ int CPU::ld_a_ma16() {
 
 int CPU::ei() {
     // TODO
-    LOG("WARNING: Called unimplemented function ei()\n");
-    LOG_ALL();
+    throw NotImplementedInstructionException();
     return 1;
 }
 //
@@ -2063,8 +1997,7 @@ int CPU::rst_38h() {
 }
 //
 int CPU::unimplemented() {
-    LOG("ERROR: Called undefined instruction\n");
-    LOG_ALL();
+    throw UndefinedInstructionException();
     return 0;
 }
 

@@ -18,19 +18,7 @@ using ::testing::Return;
 
 class CpuTest : public ::testing::Test {
 protected:
-    CpuTest() : mmu{}, regs{}, cpu{create_cpu(mmu, regs)}, renderer{}, gpu{renderer}, bps{} {
-        // TODO: Remove LOG_INIT
-        LOG_INIT(*static_cast<CPU*>(cpu.get()), mmu, gpu, bps);
-    }
-
-    MockMmu mmu;
-    ICpu::Registers regs;
-    std::unique_ptr<ICpu> cpu;
-
-    // TODO: Remove GPU, renderer mock and breakpoints map from this test file.
-    MockRenderer renderer;
-    GPU gpu;
-    std::unordered_set<uint16_t> bps;
+    CpuTest() : mmu{}, regs{}, cpu{create_cpu(mmu, regs)} {}
 
     void execute_instruction(uint8_t instr) {
         EXPECT_CALL(mmu, read_byte(_)).WillOnce(Return(instr));
@@ -49,6 +37,10 @@ protected:
         EXPECT_EQ(regs.pc, expected_regs.pc);
         EXPECT_EQ(regs.sp, expected_regs.sp);
     }
+
+    MockMmu mmu;
+    ICpu::Registers regs;
+    std::unique_ptr<ICpu> cpu;
 };
 
 

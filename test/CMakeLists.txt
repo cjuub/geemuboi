@@ -14,5 +14,4 @@ endif()
 
 add_subdirectory(core)
 add_subdirectory(input)
-add_subdirectory(utils)
 add_subdirectory(view)

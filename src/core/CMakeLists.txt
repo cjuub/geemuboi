@@ -1,6 +1,7 @@
 project(geemuboi_core)
 
 add_library(${PROJECT_NAME} STATIC
+    cpu_debug_decorator.cpp
     cpu_factory.cpp
     cpu.cpp
     gpu.cpp
