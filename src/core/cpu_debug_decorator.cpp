@@ -5,8 +5,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include "core/cpu.h"
-
 
 CpuDebugDecorator::CpuDebugDecorator(
     std::unique_ptr<ICpu> cpu_in,

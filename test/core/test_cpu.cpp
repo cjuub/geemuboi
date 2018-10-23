@@ -10,8 +10,6 @@
 #include "core/mock_mmu.h"
 #include "view/mock_renderer.h"
 
-#include "core/cpu.h"
-
 using ::testing::_;
 using ::testing::Return;
 

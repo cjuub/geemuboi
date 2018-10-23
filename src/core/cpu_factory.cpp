@@ -2,7 +2,7 @@
 
 #include "core/icpu.h"
 
-#include "core/cpu.h"
+#include "cpu.h"
 
 
 std::unique_ptr<ICpu> create_cpu(IMmu& mmu, ICpu::Registers& regs) {
