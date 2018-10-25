@@ -3,6 +3,9 @@
 #include <fstream>
 #include <iostream>
 
+namespace geemuboi::core {
+
+
 MMU::MMU(GPU& gpu_in, Input& input_in, const std::string& bios_file, const std::string& rom_file) : 
     gpu(gpu_in), 
     input(input_in),
@@ -184,4 +187,6 @@ int MMU::get_area(uint16_t addr) {
             return AREA_IE_REG;
         }
     }
+}
+
 }

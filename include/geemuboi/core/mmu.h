@@ -8,6 +8,9 @@
 #include <cstdint>
 #include <string>
 
+namespace geemuboi::core {
+
+
 class MMU : public IMmu {
 public:
     MMU(GPU& gpu, Input& input_in, const std::string& bios_file, const std::string& rom_file);
@@ -59,5 +62,7 @@ private:
     uint8_t hram[0x7F];
 };
 
-#endif
 
+}
+
+#endif

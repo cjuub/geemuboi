@@ -1,5 +1,7 @@
 #include "core/input.h"
 
+namespace geemuboi::core {
+
 
 Input::Input() : buttons_pressed{0x0F, 0x0F}, 
     column_down{}
@@ -28,3 +30,5 @@ bool Input::get_column_down(int column) const {
     return column_down[column];
 }
 
+
+}

@@ -1,5 +1,9 @@
 #include "core/gpu.h"
 
+namespace geemuboi::core {
+
+using namespace geemuboi::view;
+
 
 GPU::GPU(Renderer& renderer_in) : vram{},
     oam{},
@@ -232,3 +236,4 @@ void GPU::set_obj_palette(int index, uint8_t val) {
     obj_palette[index] = val;
 }
 
+}

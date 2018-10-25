@@ -8,6 +8,8 @@
 #include <vector>
 #include <functional>
 
+namespace geemuboi::core {
+
 
 class CPU : public ICpu {
 public:
@@ -889,6 +891,9 @@ inline void CPU::res_b_r8(uint8_t b, uint8_t& r) {
 
 inline void CPU::set_b_r8(uint8_t b, uint8_t& r) {
     r |= 1 << b;
+}
+
+
 }
 
 #endif

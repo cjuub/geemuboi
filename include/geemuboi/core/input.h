@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+namespace geemuboi::core {
+
+
 class Input {
 public:
     Input();
@@ -27,5 +30,8 @@ private:
     uint8_t buttons_pressed[2];
     bool column_down[2];
 };
+
+
+}
 
 #endif

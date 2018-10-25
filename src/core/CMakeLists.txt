@@ -21,3 +21,8 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include/geemuboi
 )
+
+target_compile_features(${PROJECT_NAME} 
+    PRIVATE 
+        cxx_std_17
+)

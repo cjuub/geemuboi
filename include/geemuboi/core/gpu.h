@@ -5,9 +5,12 @@
 
 #include <cstdint>
 
+namespace geemuboi::core {
+
+
 class GPU {
 public:
-    GPU(Renderer& renderer_in);
+    GPU(geemuboi::view::Renderer& renderer_in);
 
     void step(int cpu_cycles);
     void write_byte_vram(uint16_t addr, uint8_t val);
@@ -106,8 +109,12 @@ private:
     uint8_t bg_palette;
     uint8_t obj_palette[2];
 
-    Renderer& renderer;
-    uint32_t framebuffer[Renderer::SCREEN_WIDTH * Renderer::SCREEN_HEIGHT];
+    geemuboi::view::Renderer& renderer;
+    uint32_t framebuffer[geemuboi::view::Renderer::SCREEN_WIDTH * 
+                         geemuboi::view::Renderer::SCREEN_HEIGHT];
 };
+
+
+}
 
 #endif

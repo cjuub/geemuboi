@@ -25,5 +25,10 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/include/test
 )
 
+target_compile_features(${PROJECT_NAME} 
+    PRIVATE 
+        cxx_std_17
+)
+
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})

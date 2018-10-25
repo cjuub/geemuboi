@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <stdexcept>
 
+namespace geemuboi::core {
+
 
 class NotImplementedMemoryRegionException: public std::logic_error {
 public:
@@ -20,3 +22,6 @@ public:
 
     virtual ~IMmu() {}
 };
+
+
+}

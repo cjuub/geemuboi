@@ -5,6 +5,8 @@
 #include <iostream>
 #include <iomanip>
 
+namespace geemuboi::core  {
+
 
 CpuDebugDecorator::CpuDebugDecorator(
     std::unique_ptr<ICpu> cpu_in,
@@ -104,4 +106,7 @@ void CpuDebugDecorator::print_current_instruction(int before, int after) const {
         std::cout << "0x" << static_cast<unsigned>(regs.pc + i) << ": ";
         std::cout << instruction_names[mmu.read_byte(regs.pc + i)] << std::endl;
     }
+}
+
+
 }

@@ -3,6 +3,9 @@
 
 #include <cstdint>
 
+namespace geemuboi::view {
+
+
 class Renderer {
 public:
     static const int SCREEN_WIDTH = 160;
@@ -12,5 +15,7 @@ public:
     virtual void render_frame(uint32_t img[]) = 0;
 };
 
-#endif
 
+}
+
+#endif

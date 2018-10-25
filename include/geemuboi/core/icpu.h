@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <stdexcept>
 
+namespace geemuboi::core {
+
 
 class NotImplementedInstructionException : public std::logic_error {
 public:
@@ -39,3 +41,6 @@ public:
 
     virtual ~ICpu() {}
 };
+
+
+}

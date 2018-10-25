@@ -5,6 +5,9 @@
 
 #include <SDL2/SDL.h>
 
+namespace geemuboi::view {
+
+
 class SDLRenderer : public Renderer {
 public:
     SDLRenderer();
@@ -16,5 +19,7 @@ private:
     SDL_Texture* framebuffer;
 };
 
-#endif
 
+}
+
+#endif

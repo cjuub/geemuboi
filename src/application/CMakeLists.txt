@@ -34,3 +34,8 @@ target_compile_options(${PROJECT_NAME}
         -pedantic-errors
         -Wold-style-cast
 )
+
+target_compile_features(${PROJECT_NAME} 
+    PRIVATE 
+        cxx_std_17
+)

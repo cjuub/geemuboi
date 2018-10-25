@@ -10,6 +10,10 @@
 #include "core/mock_mmu.h"
 #include "view/mock_renderer.h"
 
+namespace geemuboi::test::core {
+
+using namespace geemuboi::core;
+
 using ::testing::_;
 using ::testing::Return;
 
@@ -64,4 +68,6 @@ TEST_F(CpuTest, ld_bc_d16) {
     verify_state_changes(expected_regs);
 
     EXPECT_EQ(cpu->get_cycles_executed(), 3);
+}
+
 }

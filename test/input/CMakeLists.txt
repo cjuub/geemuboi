@@ -19,5 +19,10 @@ target_compile_options(${PROJECT_NAME}
         -Wold-style-cast
 )
 
+target_compile_features(${PROJECT_NAME} 
+    PRIVATE 
+        cxx_std_17
+)
+
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})

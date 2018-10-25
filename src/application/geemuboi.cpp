@@ -17,6 +17,10 @@
 #include <SDL2/SDL.h>
 #include <args.hxx>
 
+using namespace geemuboi::core;
+using namespace geemuboi::view;
+using namespace geemuboi::input;
+
 const double MILLIS_PER_FRAME = 1000 / 60;
 
 
@@ -115,4 +119,6 @@ int main(int argc, char* argv[]) {
     } 
 
     SDL_Quit();
+
+    return 0;
 }

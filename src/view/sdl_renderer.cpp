@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 
+namespace geemuboi::view {
+
+
 SDLRenderer::SDLRenderer() : window{},
     renderer{},
     framebuffer{} {
@@ -35,4 +38,7 @@ void SDLRenderer::update_fps_indicator(int fps) {
     title += std::to_string(fps);
     title += ")";
     SDL_SetWindowTitle(window, title.c_str());
+}
+
+
 }

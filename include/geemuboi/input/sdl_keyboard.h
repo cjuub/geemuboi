@@ -5,9 +5,12 @@
 
 #include <SDL2/SDL.h>
 
+namespace geemuboi::input {
+
+
 class SDLKeyboard {
 public:
-    SDLKeyboard(Input& input_in);
+    SDLKeyboard(geemuboi::core::Input& input_in);
     void update_button_presses();
 private:
     enum Keys {
@@ -21,7 +24,10 @@ private:
         KEY_DOWN = SDL_SCANCODE_DOWN
     };
 
-    Input& input;
+    geemuboi::core::Input& input;
 };
+
+
+}
 
 #endif

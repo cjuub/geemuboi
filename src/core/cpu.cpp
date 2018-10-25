@@ -1,5 +1,7 @@
 #include "cpu.h"
 
+namespace geemuboi::core {
+
 
 CPU::CPU(IMmu& mmu_in, Registers& regs_in) : mmu(mmu_in), 
     regs(regs_in),
@@ -3375,4 +3377,7 @@ int CPU::set_7_mhl() {
 int CPU::set_7_a() {
     set_b_r8(7, regs.a);
     return 2;
+}
+
+
 }

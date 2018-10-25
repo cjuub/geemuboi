@@ -8,6 +8,9 @@
 #include <unordered_set>
 #include <vector>
 
+namespace geemuboi::core {
+
+
 class CpuDebugDecorator : public ICpu {
 public:
     CpuDebugDecorator(
@@ -30,3 +33,5 @@ private:
     const std::unordered_set<uint16_t>& breakpoints;
     std::vector<std::string> instruction_names;
 };
+
+}

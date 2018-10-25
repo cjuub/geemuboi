@@ -2,6 +2,11 @@
 
 #include <SDL2/SDL.h>
 
+namespace geemuboi::input {
+
+using namespace geemuboi::core;
+
+
 SDLKeyboard::SDLKeyboard(Input& input_in) : input(input_in) {}
 
 void SDLKeyboard::update_button_presses() {
@@ -22,3 +27,5 @@ void SDLKeyboard::update_button_presses() {
     input.set_buttons_pressed(1, col2);
 }
 
+
+}
