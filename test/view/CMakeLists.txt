@@ -1,4 +1,4 @@
-project(atest_geemuboi_view)
+project(test_geemuboi_view)
 
 add_executable(${PROJECT_NAME}
     test_view.cpp
