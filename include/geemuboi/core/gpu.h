@@ -1,5 +1,4 @@
-#ifndef GPU_H
-#define GPU_H
+#pragma once
 
 #include "view/renderer.h"
 
@@ -116,5 +115,3 @@ private:
 
 
 }
-
-#endif

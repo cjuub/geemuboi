@@ -1,5 +1,4 @@
-#ifndef SDL_KEYBOARD_H
-#define SDL_KEYBOARD_H
+#pragma once
 
 #include "core/input.h"
 
@@ -29,5 +28,3 @@ private:
 
 
 }
-
-#endif

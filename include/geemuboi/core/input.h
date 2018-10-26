@@ -1,5 +1,4 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
 
 #include <cstdint>
 
@@ -33,5 +32,3 @@ private:
 
 
 }
-
-#endif

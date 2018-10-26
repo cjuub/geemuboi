@@ -1,5 +1,4 @@
-#ifndef CPU_H
-#define CPU_H
+#pragma once
 
 #include "core/icpu.h"
 #include "core/immu.h"
@@ -895,5 +894,3 @@ inline void CPU::set_b_r8(uint8_t b, uint8_t& r) {
 
 
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef MMU_H
-#define MMU_H
+#pragma once
 
 #include "core/gpu.h"
 #include "core/input.h"
@@ -64,5 +63,3 @@ private:
 
 
 }
-
-#endif

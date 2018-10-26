@@ -1,5 +1,4 @@
-#ifndef SDL_RENDERER_H
-#define SDL_RENDERER_H
+#pragma once
 
 #include "view/renderer.h"
 
@@ -21,5 +20,3 @@ private:
 
 
 }
-
-#endif
