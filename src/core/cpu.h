@@ -587,11 +587,6 @@ private:
  
     int unimplemented();
 
-    static const int Z_FLAG = 0x80;
-    static const int N_FLAG = 0x40;
-    static const int H_FLAG = 0x20;
-    static const int C_FLAG = 0x10;
-
     IMmu& mmu;
     Registers& regs;
     const std::vector<std::function<int()>> instructions;
@@ -600,26 +595,26 @@ private:
 };
 
 inline void CPU::dec_r8(uint8_t& r) {
-    regs.f &= C_FLAG;
-    regs.f |= N_FLAG;
+    regs.f &= ICpu::C_FLAG;
+    regs.f |= ICpu::N_FLAG;
 
     if (!(r & 0xF)) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (!--r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::inc_r8(uint8_t& r) {
-    regs.f &= C_FLAG;
+    regs.f &= ICpu::C_FLAG;
     if ((r & 0xF) == 0xF) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (!++r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -636,7 +631,7 @@ inline void CPU::inc_r16(uint8_t& high, uint8_t& low) {
 }
 
 inline void CPU::add_hl_r16(uint8_t high, uint8_t low) {
-    regs.f &= Z_FLAG;
+    regs.f &= ICpu::Z_FLAG;
     uint32_t sum = regs.l + low;
     if (sum >= 0x100) {
         ++high;
@@ -644,12 +639,12 @@ inline void CPU::add_hl_r16(uint8_t high, uint8_t low) {
 
     regs.l += low;
     if ((regs.h & 0xF) + (high & 0xF) >= 0x10) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     sum = regs.h + high;
     if (sum >= 0x10000) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     regs.h += high; 
@@ -671,82 +666,82 @@ inline void CPU::ld_r8_r8(uint8_t& r1, uint8_t r2) {
 inline void CPU::add_r8_r8(uint8_t& r1, uint8_t r2) {
     regs.f = 0;
     if ((r1 & 0xF) + (r2 & 0xF) >= 0x10) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (r1 + r2 >= 0x100) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if (!(r1 += r2)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::adc_r8_r8(uint8_t& r1, uint8_t r2) {
-    uint8_t carry = (regs.f & C_FLAG) >> 4;
+    uint8_t carry = (regs.f & ICpu::C_FLAG) >> 4;
     regs.f = 0;
     if ((r1 & 0xF) + (r2 & 0xF) + carry >= 0x10) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (r1 + r2 + carry >= 0x100) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if (!(r1 += r2 + carry)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::sub_r8(uint8_t r) {
     regs.f = 0;
-    regs.f |= N_FLAG;
+    regs.f |= ICpu::N_FLAG;
 
     if ((regs.a & 0xF) < (r & 0xF)) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (regs.a < r) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if (!(regs.a -= r)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::sbc_r8_r8(uint8_t& r1, uint8_t r2) {
-    uint8_t carry = (regs.f & C_FLAG) >> 4;
+    uint8_t carry = (regs.f & ICpu::C_FLAG) >> 4;
     regs.f = 0;
-    regs.f |= N_FLAG;
+    regs.f |= ICpu::N_FLAG;
 
     if ((r1 & 0xF) < (r2 & 0xF) - carry) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (r1 < r2 - carry) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if (!(r1 -= r2 - carry)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::and_r8(uint8_t r) {
     regs.f = 0;
     if (!(regs.a &= r)) {
-        regs.f |= Z_FLAG | H_FLAG;
+        regs.f |= ICpu::Z_FLAG | ICpu::H_FLAG;
     } else {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 }
 
 inline void CPU::xor_r8(uint8_t r) {
     regs.f = 0;
     if (!(regs.a ^= r)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -763,24 +758,24 @@ inline void CPU::push_r16(uint8_t high, uint8_t low) {
 inline void CPU::or_r8(uint8_t r) {
     regs.f = 0;
     if (!(regs.a |= r)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::cp_r8(uint8_t r) {
     regs.f = 0;
-    regs.f |= N_FLAG;
+    regs.f |= ICpu::N_FLAG;
 
     if ((regs.a & 0xF) < (r & 0xF)) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     if (regs.a < r) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if (!(regs.a - r)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -793,50 +788,50 @@ inline void CPU::rst(uint8_t val) {
 inline void CPU::rlc_r8(uint8_t& r) {
     regs.f = 0;
     if (r & 0x80) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     r = (r << 1) + (regs.f >> 4);
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::rrc_r8(uint8_t& r) {
     regs.f = 0;
     if (r & 0x1) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     r = (r >> 1) + (regs.f << 3);
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::rl_r8(uint8_t& r) {
-    uint8_t carry = (regs.f & C_FLAG) >> 4;
+    uint8_t carry = (regs.f & ICpu::C_FLAG) >> 4;
     regs.f = 0;
     if (r & 0x80) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     r = (r << 1) + carry;
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::rr_r8(uint8_t& r) {
-    uint8_t carry = (regs.f & C_FLAG) << 3;
+    uint8_t carry = (regs.f & ICpu::C_FLAG) << 3;
     regs.f = 0;
     if (r & 0x1) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     r = (r >> 1) + carry;
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -844,7 +839,7 @@ inline void CPU::sla_r8(uint8_t& r) {
     regs.f = 0;
     regs.f |= (r & 0x80) << 4;
     if (!(r <<= 1)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -855,7 +850,7 @@ inline void CPU::sra_r8(uint8_t& r) {
     r >>= 1;
     r += msb;
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -864,7 +859,7 @@ inline void CPU::swap_r8(uint8_t& r) {
     uint8_t high = r >> 4;
     r = (r << 4) + high;
     if (!r) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
@@ -872,15 +867,15 @@ inline void CPU::srl_r8(uint8_t& r) {
     regs.f = 0;
     regs.f |= (r & 0x1) << 4;
     if (!(r >>= 1)) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 
 inline void CPU::bit_b_r8(uint8_t b, uint8_t r) {
-    regs.f &= C_FLAG;
-    regs.f |= H_FLAG;
+    regs.f &= ICpu::C_FLAG;
+    regs.f |= ICpu::H_FLAG;
     if (!(r & (1 << b))) {
-        regs.f |= Z_FLAG;
+        regs.f |= ICpu::Z_FLAG;
     }
 }
 

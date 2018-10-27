@@ -541,6 +541,7 @@ int CPU::nop() {
 int CPU::ld_bc_d16() {
     ld_r16_r16(regs.b, regs.c, mmu.read_word(regs.pc));
     regs.pc += 2;
+
     cycles += 3;
     return 3;
 }
@@ -548,26 +549,36 @@ int CPU::ld_bc_d16() {
 int CPU::ld_mbc_a() {
     uint16_t addr = (regs.b << 8) + regs.c;
     ld_mr_r8(addr, regs.a);
+
+    cycles += 2;
     return 2;
 }
 
 int CPU::inc_bc() {
     inc_r16(regs.b, regs.c);
+
+    cycles += 2;
     return 2;
 }
 
 int CPU::inc_b() {
     inc_r8(regs.b);
+
+    cycles += 1;
     return 1;
 }
 
 int CPU::dec_b() {
     dec_r8(regs.b);
+
+    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_d8() {
     ld_r8_r8(regs.b, mmu.read_byte(regs.pc++));
+
+    cycles += 2;
     return 2;
 }
 
@@ -729,7 +740,7 @@ int CPU::rra() {
 
 // 0x2
 int CPU::jr_nz_r8() {
-    if (!(regs.f & Z_FLAG)) {
+    if (!(regs.f & ICpu::Z_FLAG)) {
         int offset = static_cast<int8_t>(mmu.read_byte(regs.pc)) + 2;
         regs.pc += offset - 1;
         return 3;
@@ -1880,11 +1891,11 @@ int CPU::add_sp_r8() {
     int8_t val = static_cast<int8_t>(mmu.read_byte(regs.pc++));
 
     if ((regs.sp & 0xFF) + val > 0xFF) {
-        regs.f |= C_FLAG; 
+        regs.f |= ICpu::C_FLAG; 
     }
 
     if ((regs.sp & 0xF) + (val & 0xF) > 0xF) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     regs.sp += val;
@@ -1959,11 +1970,11 @@ int CPU::ldhl_sp_r8() {
     int8_t val = static_cast<int8_t>(mmu.read_byte(regs.pc++));
 
     if ((regs.sp & 0xFF) + val > 0xFF) {
-        regs.f |= C_FLAG;
+        regs.f |= ICpu::C_FLAG;
     }
 
     if ((regs.sp & 0xF) + (val & 0xF) > 0xF) {
-        regs.f |= H_FLAG;
+        regs.f |= ICpu::H_FLAG;
     }
 
     regs.h = (regs.sp + val) >> 8;
