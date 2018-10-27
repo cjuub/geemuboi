@@ -50,13 +50,13 @@ uint8_t MMU::read_byte(uint16_t addr) {
     case AREA_ROM0: return rom[addr];
     case AREA_ROM1: return rom[addr];
     case AREA_VRAM: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_VRAM", addr, "READ_BYTE");
     case AREA_ERAM: return eram[addr & 0x1FFF];
     case AREA_WRAM: return wram[addr & 0x1FFF];
     case AREA_OAM:
         return gpu.read_byte_oam(addr - 0xFE00);
     case AREA_UNUSED: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_UNUSED", addr, "READ_BYTE");
     case AREA_IO:
         switch (addr) {
         case JOYPAD_REG: return input.get_buttons_pressed();
@@ -67,13 +67,13 @@ uint8_t MMU::read_byte(uint16_t addr) {
         case GPU_REG_OBJ_PALETTE_0: return gpu.get_obj_palette(0);
         case GPU_REG_OBJ_PALETTE_1: return gpu.get_obj_palette(1);
         default: 
-            throw NotImplementedMemoryRegionException();
+            throw NotImplementedMemoryRegionException("AREA_IO", addr, "READ_BYTE");
         }
     case AREA_HRAM: return hram[addr & 0x7F];
     case AREA_IE_REG: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_IE_REG", addr, "READ_BYTE");
     default: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("UNDEFINED_AREA", addr, "READ_BYTE");
     }
 }
 
@@ -83,20 +83,20 @@ uint16_t MMU::read_word(uint16_t addr) {
     case AREA_ROM0: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_ROM1: return rom[addr] + (rom[addr + 1] << 8);
     case AREA_VRAM: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_VRAM", addr, "READ_WORD");
     case AREA_ERAM: return eram[addr & 0x2000] + ((eram[addr + 1] & 0x2000) << 8);
     case AREA_WRAM: return wram[addr & 0x2000] + ((wram[addr + 1] & 0x2000) << 8);
     case AREA_OAM: 
         return (gpu.read_byte_oam(addr - 0xFE00 + 1) << 8) + gpu.read_byte_oam(addr - 0xFE00);
     case AREA_UNUSED: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_UNUSED", addr, "READ_WORD");
     case AREA_IO: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_IO", addr, "READ_WORD");
     case AREA_HRAM: return hram[addr & 0x7F] + (hram[(addr & 0x7F) + 1] << 8);
     case AREA_IE_REG: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("AREA_IE_REG", addr, "READ_WORD");
     default: 
-        throw NotImplementedMemoryRegionException();
+        throw NotImplementedMemoryRegionException("UNDEFINED_AREA", addr, "READ_WORD");
     }
 }
 

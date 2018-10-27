@@ -15,9 +15,10 @@ CpuDebugDecorator::CpuDebugDecorator(
     const std::unordered_set<uint16_t>& breakpoints_in) 
         : cpu{std::move(cpu_in)}, 
           mmu{mmu_in}, 
-          regs{regs_in}, 
+          real_regs{regs_in},
           breakpoints{breakpoints_in}, 
-          instruction_names{} {
+          instruction_names{},
+          regs{} {
     std::ifstream ifs("instr.txt");
 
     std::string str;
@@ -28,11 +29,14 @@ CpuDebugDecorator::CpuDebugDecorator(
 
 
 int CpuDebugDecorator::execute() {
+    regs = real_regs;
+
     if (breakpoints.find(regs.pc) != breakpoints.end()) {
         print_breakpoint();
     }
 
     std::string next_instruction{instruction_names[mmu.read_byte(regs.pc)]};
+    
     try {
         return cpu->execute();
     } catch (const NotImplementedInstructionException& e) {
@@ -40,8 +44,8 @@ int CpuDebugDecorator::execute() {
     } catch (const UndefinedInstructionException& e) {
         std::cout << e.what() << " Instruction: " << next_instruction << std::endl;
     } catch (const NotImplementedMemoryRegionException& e) {
-        // TODO print the region name
-        std::cout << e.what() << std::endl;
+        std::cout << e.what() << " " << e.get_region_name() << " 0x" << std::hex
+                  << e.get_address() << " " << e.get_access() << std::endl;
     }
 
     return 0;
@@ -68,6 +72,7 @@ void CpuDebugDecorator::print_breakpoint() const {
 
 void CpuDebugDecorator::print_cpu_context() const {
     std::cout << std::hex << std::setfill('0');
+
 
     std::cout << "A: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.a) << " ";
     std::cout << "F: 0x" << std::hex << std::setw(4) << static_cast<unsigned>(regs.f) << " ";

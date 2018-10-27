@@ -29,9 +29,11 @@ private:
 
     std::unique_ptr<ICpu> cpu;
     IMmu& mmu;
-    const ICpu::Registers& regs;
+    const ICpu::Registers& real_regs;
     const std::unordered_set<uint16_t>& breakpoints;
+
     std::vector<std::string> instruction_names;
+    ICpu::Registers regs;
 };
 
 }
