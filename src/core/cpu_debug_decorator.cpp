@@ -46,6 +46,7 @@ int CpuDebugDecorator::execute() {
     } catch (const NotImplementedMemoryRegionException& e) {
         std::cout << e.what() << " " << e.get_region_name() << " 0x" << std::hex
                   << e.get_address() << " " << e.get_access() << std::endl;
+        print_breakpoint();
     }
 
     return 0;
