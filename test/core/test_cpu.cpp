@@ -44,11 +44,44 @@ protected:
         return (high << 8) + low;
     }
 
+    void verify_ld_r16_d16(uint8_t instruction, ICpu::Registers& expected_regs) {
+        regs.f = ICpu::C_FLAG | ICpu::N_FLAG | ICpu::H_FLAG | ICpu::Z_FLAG;
+
+        EXPECT_CALL(mmu, read_word(regs.pc + 1)).WillOnce(Return(0x3344));
+        execute_instruction(instruction);
+
+        expected_regs.f = ICpu::C_FLAG | ICpu::N_FLAG | ICpu::H_FLAG | ICpu::Z_FLAG;
+        expected_regs.pc = 3;
+        verify_state_changes(expected_regs);
+
+        EXPECT_EQ(cpu->get_cycles_executed(), 3);
+    }
+
+    void verify_inc_reg16(uint8_t instruction, ICpu::Registers& expected_regs) {
+        execute_instruction(instruction);
+
+        expected_regs.pc = 1;
+        verify_state_changes(expected_regs);
+
+        EXPECT_EQ(cpu->get_cycles_executed(), 2);
+    }
+
+    void verify_ld_r8_r8(uint8_t instruction, ICpu::Registers& expected_regs) {
+        regs.f = ICpu::C_FLAG | ICpu::N_FLAG | ICpu::H_FLAG | ICpu::Z_FLAG;
+
+        execute_instruction(instruction);
+
+        expected_regs.f = ICpu::C_FLAG | ICpu::N_FLAG | ICpu::H_FLAG | ICpu::Z_FLAG;
+        expected_regs.pc = 1;
+        verify_state_changes(expected_regs);
+
+        EXPECT_EQ(cpu->get_cycles_executed(), 1);
+    }
+
     MockMmu mmu;
     ICpu::Registers regs;
     std::unique_ptr<ICpu> cpu;
 };
-
 
 TEST_F(CpuTest, nop) {
     execute_instruction(0x00);
@@ -60,18 +93,11 @@ TEST_F(CpuTest, nop) {
     EXPECT_EQ(cpu->get_cycles_executed(), 1);
 }
 
-
 TEST_F(CpuTest, ld_bc_d16) {
-    EXPECT_CALL(mmu, read_word(regs.pc + 1)).WillOnce(Return(0x3344));
-    execute_instruction(0x01);
-
     ICpu::Registers expected_regs{};
     expected_regs.b = 0x33;
     expected_regs.c = 0x44;
-    expected_regs.pc = 3;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 3);
+    verify_ld_r16_d16(0x01, expected_regs);
 }
 
 TEST_F(CpuTest, ld_mbc_a) {
@@ -93,40 +119,25 @@ TEST_F(CpuTest, ld_mbc_a) {
 }
 
 TEST_F(CpuTest, inc_bc_low) {
-    execute_instruction(0x3);
-
     ICpu::Registers expected_regs{};
     expected_regs.c = 1;
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+    verify_inc_reg16(0x03, expected_regs);
 }
 
 TEST_F(CpuTest, inc_bc_low_high) {
     regs.c = 0xFF;
 
-    execute_instruction(0x3);
-
     ICpu::Registers expected_regs{};
     expected_regs.b = 1;
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+    verify_inc_reg16(0x03, expected_regs);
 }
 
 TEST_F(CpuTest, inc_bc_low_overflow) {
     regs.b = 0xFF;
     regs.c = 0xFF;
 
-    execute_instruction(0x3);
-
     ICpu::Registers expected_regs{};
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+    verify_inc_reg16(0x03, expected_regs);
 }
 
 TEST_F(CpuTest, inc_b) {
@@ -313,15 +324,12 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_de_d16) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_de_d16) {
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0x33;
+    expected_regs.e = 0x44;
+    verify_ld_r16_d16(0x11, expected_regs);
+}
 
 // TEST_F(CpuTest, ld_mde_a) {
 //     // execute_instruction(x);
@@ -473,15 +481,12 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_hl_d16) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_hl_d16) {
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0x33;
+    expected_regs.l = 0x44;
+    verify_ld_r16_d16(0x21, expected_regs);
+}
 
 // TEST_F(CpuTest, ldi_mhl_a) {
 //     // execute_instruction(x);
@@ -633,15 +638,11 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_sp_d16) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_sp_d16) {
+    ICpu::Registers expected_regs{};
+    expected_regs.sp = 0x3344;
+    verify_ld_r16_d16(0x31, expected_regs);
+}
 
 // TEST_F(CpuTest, ldd_mhl_a) {
 //     // execute_instruction(x);
@@ -783,145 +784,72 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_b_b) {
-//     // execute_instruction(x);
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
+// TEST_F(CpuTest, ld_r8_r8) {
+    // r1_list = [];
 // }
 
-// TEST_F(CpuTest, ld_b_c) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_b_b) {
+    regs.b = 0xFF;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    verify_ld_r8_r8(0x40, expected_regs);
+}
 
-// TEST_F(CpuTest, ld_b_d) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_b_c) {
+    regs.c = 0xFF;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.c = 0xFF;
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    verify_ld_r8_r8(0x41, expected_regs);
+}
 
-// TEST_F(CpuTest, ld_b_e) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_b_d) {
+    regs.d = 0xFF;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.d = 0xFF;
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    verify_ld_r8_r8(0x42, expected_regs);
+}
 
-// TEST_F(CpuTest, ld_b_h) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_b_e) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_b_h) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_b_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_b_l) {
+}
 
 // TEST_F(CpuTest, ld_b_mhl) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_b_a) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_b_a) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_c_b) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_c_c) {
+}
 
-// TEST_F(CpuTest, ld_c_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_c_d) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_c_e) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_c_h) {
+}
 
-// TEST_F(CpuTest, ld_c_c) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_c_d) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_c_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_c_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_c_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_c_l) {
+}
 
 // TEST_F(CpuTest, ld_c_mhl) {
 //     // execute_instruction(x);
@@ -933,75 +861,26 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_c_a) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_c_a) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_d_b) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_d_c) {
+}
 
-// TEST_F(CpuTest, ld_d_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_d_d) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_d_e) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_d_h) {
+}
 
-// TEST_F(CpuTest, ld_d_c) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_d_d) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_d_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_d_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_d_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_d_l) {
+}
 
 // TEST_F(CpuTest, ld_d_mhl) {
 //     // execute_instruction(x);
@@ -1013,75 +892,26 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_d_a) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_d_a) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_e_b) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_e_c) {
+}
 
-// TEST_F(CpuTest, ld_e_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_e_d) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_e_e) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_e_h) {
+}
 
-// TEST_F(CpuTest, ld_e_c) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_e_d) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_e_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_e_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_e_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_e_l) {
+}
 
 // TEST_F(CpuTest, ld_e_mhl) {
 //     // execute_instruction(x);
@@ -1093,75 +923,26 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_e_a) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_e_a) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_h_b) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_h_c) {
+}
 
-// TEST_F(CpuTest, ld_h_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_h_d) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_h_e) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_h_h) {
+}
 
-// TEST_F(CpuTest, ld_h_c) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_h_d) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_h_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_h_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_h_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_h_l) {
+}
 
 // TEST_F(CpuTest, ld_h_mhl) {
 //     // execute_instruction(x);
@@ -1173,75 +954,26 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_h_a) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_h_a) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_l_b) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_l_c) {
+}
 
-// TEST_F(CpuTest, ld_l_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_l_d) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_l_e) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_l_h) {
+}
 
-// TEST_F(CpuTest, ld_l_c) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_l_d) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_l_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_l_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_l_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_l_l) {
+}
 
 // TEST_F(CpuTest, ld_l_mhl) {
 //     // execute_instruction(x);
@@ -1253,15 +985,8 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_l_a) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_l_a) {
+}
 
 // TEST_F(CpuTest, ld_mhl_b) {
 //     // execute_instruction(x);
@@ -1353,55 +1078,20 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_a_c) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_a_c) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+TEST_F(CpuTest, ld_a_d) {
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_a_e) {
+}
 
-// TEST_F(CpuTest, ld_a_d) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_a_h) {
+}
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_a_e) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_a_h) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
-
-// TEST_F(CpuTest, ld_a_l) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_a_l) {
+}
 
 // TEST_F(CpuTest, ld_a_mhl) {
 //     // execute_instruction(x);
@@ -1413,15 +1103,8 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_a_a) {
-//     // execute_instruction(x);
-
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
-
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, ld_a_a) {
+}
 
 // TEST_F(CpuTest, add_a_b) {
 //     // execute_instruction(x);
