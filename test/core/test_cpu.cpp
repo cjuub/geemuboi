@@ -819,36 +819,105 @@ TEST_F(CpuTest, ld_b_d) {
 }
 
 TEST_F(CpuTest, ld_b_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x43, expected_regs);
 }
 
 TEST_F(CpuTest, ld_b_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x44, expected_regs);
 }
 
 TEST_F(CpuTest, ld_b_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x45, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_b_mhl) {
 // }
 
 TEST_F(CpuTest, ld_b_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.b = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x47, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_b) {
+    regs.b = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.b = 0xFF;
+
+    verify_ld_r8_r8(0x48, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x49, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x4A, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x4B, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x4C, expected_regs);
 }
 
 TEST_F(CpuTest, ld_c_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x4D, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_c_mhl) {
@@ -862,24 +931,72 @@ TEST_F(CpuTest, ld_c_l) {
 // }
 
 TEST_F(CpuTest, ld_c_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x4F, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_b) {
+    regs.b = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.b = 0xFF;
+
+    verify_ld_r8_r8(0x50, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x51, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x52, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x53, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x54, expected_regs);
 }
 
 TEST_F(CpuTest, ld_d_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x55, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_d_mhl) {
@@ -893,24 +1010,72 @@ TEST_F(CpuTest, ld_d_l) {
 // }
 
 TEST_F(CpuTest, ld_d_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x57, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_b) {
+    regs.b = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.b = 0xFF;
+
+    verify_ld_r8_r8(0x58, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x59, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x5A, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x5B, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x5C, expected_regs);
 }
 
 TEST_F(CpuTest, ld_e_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x5D, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_e_mhl) {
@@ -924,24 +1089,72 @@ TEST_F(CpuTest, ld_e_l) {
 // }
 
 TEST_F(CpuTest, ld_e_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x5F, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_b) {
+    regs.b = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.b = 0xFF;
+
+    verify_ld_r8_r8(0x60, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x61, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x62, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x63, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x64, expected_regs);
 }
 
 TEST_F(CpuTest, ld_h_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x65, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_h_mhl) {
@@ -955,24 +1168,72 @@ TEST_F(CpuTest, ld_h_l) {
 // }
 
 TEST_F(CpuTest, ld_h_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x67, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_b) {
+    regs.b = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.b = 0xFF;
+
+    verify_ld_r8_r8(0x68, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x69, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x6A, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x6B, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x6C, expected_regs);
 }
 
 TEST_F(CpuTest, ld_l_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x6D, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_l_mhl) {
@@ -986,6 +1247,13 @@ TEST_F(CpuTest, ld_l_l) {
 // }
 
 TEST_F(CpuTest, ld_l_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x6F, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_mhl_b) {
@@ -1068,29 +1336,64 @@ TEST_F(CpuTest, ld_l_a) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_a_b) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_a_b) {
+    regs.b = 0xFF;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.b = 0xFF;
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    verify_ld_r8_r8(0x78, expected_regs);
+}
 
 TEST_F(CpuTest, ld_a_c) {
+    regs.c = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.c = 0xFF;
+
+    verify_ld_r8_r8(0x79, expected_regs);
 }
 
 TEST_F(CpuTest, ld_a_d) {
+    regs.d = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.d = 0xFF;
+
+    verify_ld_r8_r8(0x7A, expected_regs);
 }
 
 TEST_F(CpuTest, ld_a_e) {
+    regs.e = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.e = 0xFF;
+
+    verify_ld_r8_r8(0x7B, expected_regs);
 }
 
 TEST_F(CpuTest, ld_a_h) {
+    regs.h = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.h = 0xFF;
+
+    verify_ld_r8_r8(0x7C, expected_regs);
 }
 
 TEST_F(CpuTest, ld_a_l) {
+    regs.l = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.l = 0xFF;
+
+    verify_ld_r8_r8(0x7D, expected_regs);
 }
 
 // TEST_F(CpuTest, ld_a_mhl) {
@@ -1104,6 +1407,12 @@ TEST_F(CpuTest, ld_a_l) {
 // }
 
 TEST_F(CpuTest, ld_a_a) {
+    regs.a = 0xFF;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+
+    verify_ld_r8_r8(0x7F, expected_regs);
 }
 
 // TEST_F(CpuTest, add_a_b) {

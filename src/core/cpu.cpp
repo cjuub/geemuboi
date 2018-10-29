@@ -523,7 +523,10 @@ CPU::CPU(IMmu& mmu_in, Registers& regs_in) : mmu(mmu_in),
 
 
 int CPU::execute() {
-    return instructions[mmu.read_byte(regs.pc++)]();
+    unsigned instruction_cycles = instructions[mmu.read_byte(regs.pc++)]();
+    cycles += instruction_cycles;
+
+    return instruction_cycles;
 }
 
 
@@ -534,51 +537,38 @@ unsigned CPU::get_cycles_executed() {
 
 // 0x00
 int CPU::nop() {
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_bc_d16() {
     ld_r16_r16(regs.b, regs.c, mmu.read_word(regs.pc));
     regs.pc += 2;
-
-    cycles += 3;
     return 3;
 }
 
 int CPU::ld_mbc_a() {
     uint16_t addr = (regs.b << 8) + regs.c;
     ld_mr_r8(addr, regs.a);
-
-    cycles += 2;
     return 2;
 }
 
 int CPU::inc_bc() {
     inc_r16(regs.b, regs.c);
-
-    cycles += 2;
     return 2;
 }
 
 int CPU::inc_b() {
     inc_r8(regs.b);
-
-    cycles += 1;
     return 1;
 }
 
 int CPU::dec_b() {
     dec_r8(regs.b);
-
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_d8() {
     ld_r8_r8(regs.b, mmu.read_byte(regs.pc++));
-
-    cycles += 2;
     return 2;
 }
 
@@ -649,8 +639,6 @@ int CPU::stop() {
 int CPU::ld_de_d16() {
     ld_r16_r16(regs.d, regs.e, mmu.read_word(regs.pc));
     regs.pc += 2;
-
-    cycles += 3;
     return 3;
 }
 
@@ -755,8 +743,6 @@ int CPU::jr_nz_r8() {
 int CPU::ld_hl_d16() {
     ld_r16_r16(regs.h, regs.l, mmu.read_word(regs.pc));
     regs.pc += 2;
-
-    cycles += 3;
     return 3;
 }
 
@@ -868,8 +854,6 @@ int CPU::jr_nc_r8() {
 int CPU::ld_sp_d16() {
     regs.sp = mmu.read_word(regs.pc);
     regs.pc += 2;
-
-    cycles += 3;
     return 3;
 }
 
@@ -973,38 +957,31 @@ int CPU::ccf() {
 // 0x4
 int CPU::ld_b_b() {
     ld_r8_r8(regs.b, regs.b);
-
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_c() {
     ld_r8_r8(regs.b, regs.c);
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_d() {
     ld_r8_r8(regs.b, regs.d);
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_e() {
     ld_r8_r8(regs.b, regs.e);
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_h() {
     ld_r8_r8(regs.b, regs.h);
-    cycles += 1;
     return 1;
 }
 
 int CPU::ld_b_l() {
     ld_r8_r8(regs.b, regs.l);
-    cycles += 1;
     return 1;
 }
 
