@@ -605,7 +605,7 @@ int CPU::dec_bc() {
 }
 
 int CPU::inc_c() {
-    inc_r8(regs.b);
+    inc_r8(regs.c);
     return 1;
 }
 
@@ -654,7 +654,7 @@ int CPU::inc_de() {
 }
 
 int CPU::inc_d() {
-    inc_r8(regs.b);
+    inc_r8(regs.d);
     return 1;
 }
 
