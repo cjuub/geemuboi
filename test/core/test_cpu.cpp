@@ -58,7 +58,7 @@ protected:
     }
 
     void verify_inc_dec_reg8(uint8_t instruction, ICpu::Registers& expected_regs) {
-        regs.f |= ICpu::N_FLAG | ICpu::C_FLAG;
+        regs.f |= ICpu::C_FLAG;
 
         execute_instruction(instruction);
 
@@ -66,7 +66,6 @@ protected:
         expected_regs.f |= ICpu::C_FLAG;
         verify_state_changes(expected_regs);
 
-        EXPECT_EQ(regs.f & ICpu::N_FLAG, 0);
         EXPECT_EQ(cpu->get_cycles_executed(), 1);
     }
 
@@ -157,12 +156,14 @@ TEST_F(CpuTest, inc_bc_low_overflow) {
 }
 
 TEST_F(CpuTest, inc_b) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.b = 1;
     verify_inc_dec_reg8(0x04, expected_regs);
 }
 
 TEST_F(CpuTest, inc_b_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.b = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
@@ -171,43 +172,25 @@ TEST_F(CpuTest, inc_b_zero_and_half_carry) {
 
 TEST_F(CpuTest, dec_b) {
     regs.b = 5;
-    regs.f = ICpu::C_FLAG;
-
-    execute_instruction(0x5);
 
     ICpu::Registers expected_regs{};
     expected_regs.b = 4;
-    expected_regs.f = ICpu::N_FLAG | ICpu::C_FLAG;
-
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 1);
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x05, expected_regs);
 }
 
 TEST_F(CpuTest, dec_b_half_carry) {
-    execute_instruction(0x5);
-
     ICpu::Registers expected_regs{};
     expected_regs.b = 0xFF;
     expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 1);
+    verify_inc_dec_reg8(0x05, expected_regs);
 }
 
 TEST_F(CpuTest, dec_b_zero) {
     regs.b = 1;
-
-    execute_instruction(0x5);
-
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
-    expected_regs.pc = 1;
-    verify_state_changes(expected_regs);
-
-    EXPECT_EQ(cpu->get_cycles_executed(), 1);
+    verify_inc_dec_reg8(0x05, expected_regs);
 }
 
 TEST_F(CpuTest, ld_b_d8) {
@@ -288,27 +271,42 @@ TEST_F(CpuTest, dec_bc_half_underflow) {
 }
 
 TEST_F(CpuTest, inc_c) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.c = 1;
     verify_inc_dec_reg8(0x0C, expected_regs);
 }
 
 TEST_F(CpuTest, inc_c_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.c = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x0C, expected_regs);
 }
 
-// TEST_F(CpuTest, dec_c) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, dec_c) {
+    regs.c = 5;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x0D, expected_regs);
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, dec_c_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.c = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x0D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_c_zero) {
+    regs.c = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x0D, expected_regs);
+}
 
 // TEST_F(CpuTest, ld_c_d8) {
 //     // execute_instruction(x);
@@ -380,27 +378,42 @@ TEST_F(CpuTest, inc_de_low_overflow) {
 }
 
 TEST_F(CpuTest, inc_d) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.d = 1;
     verify_inc_dec_reg8(0x14, expected_regs);
 }
 
 TEST_F(CpuTest, inc_d_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.d = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x14, expected_regs);
 }
 
-// TEST_F(CpuTest, dec_d) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, dec_d) {
+    regs.d = 5;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x15, expected_regs);
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, dec_d_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x15, expected_regs);
+}
+
+TEST_F(CpuTest, dec_d_zero) {
+    regs.d = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x15, expected_regs);
+}
 
 // TEST_F(CpuTest, ld_d_d8) {
 //     // execute_instruction(x);
@@ -474,27 +487,42 @@ TEST_F(CpuTest, dec_de_half_underflow) {
 }
 
 TEST_F(CpuTest, inc_e) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.e = 1;
     verify_inc_dec_reg8(0x1C, expected_regs);
 }
 
 TEST_F(CpuTest, inc_e_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.e = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x1C, expected_regs);
 }
 
-// TEST_F(CpuTest, dec_e) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, dec_e) {
+    regs.e = 5;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x1D, expected_regs);
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, dec_e_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x1D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_e_zero) {
+    regs.e = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x1D, expected_regs);
+}
 
 // TEST_F(CpuTest, ld_e_d8) {
 //     // execute_instruction(x);
@@ -566,27 +594,42 @@ TEST_F(CpuTest, inc_hl_low_overflow) {
 }
 
 TEST_F(CpuTest, inc_h) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.h = 1;
     verify_inc_dec_reg8(0x24, expected_regs);
 }
 
 TEST_F(CpuTest, inc_h_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.h = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x24, expected_regs);
 }
 
-// TEST_F(CpuTest, dec_h) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, dec_h) {
+    regs.h = 5;
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x25, expected_regs);
+}
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+TEST_F(CpuTest, dec_h_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x25, expected_regs);
+}
+
+TEST_F(CpuTest, dec_h_zero) {
+    regs.h = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x25, expected_regs);
+}
 
 // TEST_F(CpuTest, ld_h_d8) {
 //     // execute_instruction(x);
@@ -660,16 +703,41 @@ TEST_F(CpuTest, dec_hl_half_underflow) {
 }
 
 TEST_F(CpuTest, inc_l) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.l = 1;
     verify_inc_dec_reg8(0x2C, expected_regs);
 }
 
 TEST_F(CpuTest, inc_l_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.l = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x2C, expected_regs);
+}
+
+TEST_F(CpuTest, dec_l) {
+    regs.l = 5;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x2D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_l_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.l = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x2D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_l_zero) {
+    regs.l = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x2D, expected_regs);
 }
 
 // TEST_F(CpuTest, dec_l) {
@@ -824,16 +892,41 @@ TEST_F(CpuTest, dec_sp_underflow) {
 }
 
 TEST_F(CpuTest, inc_a) {
+    regs.f = ICpu::N_FLAG;
     ICpu::Registers expected_regs{};
     expected_regs.a = 1;
     verify_inc_dec_reg8(0x3C, expected_regs);
 }
 
 TEST_F(CpuTest, inc_a_zero_and_half_carry) {
+    regs.f = ICpu::N_FLAG;
     regs.a = 0xFF;
     ICpu::Registers expected_regs{};
     expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
     verify_inc_dec_reg8(0x3C, expected_regs);
+}
+
+TEST_F(CpuTest, dec_a) {
+    regs.a = 5;
+
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 4;
+    expected_regs.f = ICpu::N_FLAG;
+    verify_inc_dec_reg8(0x3D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_a_half_carry) {
+    ICpu::Registers expected_regs{};
+    expected_regs.a = 0xFF;
+    expected_regs.f = ICpu::N_FLAG | ICpu::H_FLAG;
+    verify_inc_dec_reg8(0x3D, expected_regs);
+}
+
+TEST_F(CpuTest, dec_a_zero) {
+    regs.a = 1;
+    ICpu::Registers expected_regs{};
+    expected_regs.f = ICpu::N_FLAG | ICpu::Z_FLAG;
+    verify_inc_dec_reg8(0x3D, expected_regs);
 }
 
 // TEST_F(CpuTest, dec_a) {
