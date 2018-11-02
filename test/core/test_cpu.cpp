@@ -504,15 +504,74 @@ TEST_F(CpuTest, dec_d_zero) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, add_hl_de) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, add_hl_de) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 1;
+    regs.l = 2;
+    regs.d = 1;
+    regs.e = 2;
+    execute_instruction(0x19);
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.d = 1;
+    expected_regs.e = 2;
+    expected_regs.h = 2;
+    expected_regs.l = 4;
+    expected_regs.f = ICpu::Z_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
+
+TEST_F(CpuTest, add_hl_de_half_carry) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 0xF;
+    regs.l = 0xFF;
+    regs.e = 1;
+    execute_instruction(0x19);
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 1;
+    expected_regs.h = 0x10;
+    expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
+
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
+
+TEST_F(CpuTest, add_hl_de_carry) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 0xFF;
+    regs.d = 0x10;
+    execute_instruction(0x19);
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0x0F;
+    expected_regs.d = 0x10;
+    expected_regs.f = ICpu::Z_FLAG | ICpu::C_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
+
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
+
+TEST_F(CpuTest, add_hl_de_half_carry_and_carry) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 0xFF;
+    regs.l = 0xFF;
+    regs.e = 1;
+    execute_instruction(0x19);
+
+    ICpu::Registers expected_regs{};
+    expected_regs.e = 1;
+    expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG | ICpu::C_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
+
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
 
 // TEST_F(CpuTest, ld_a_mde) {
 //     // execute_instruction(x);
@@ -720,15 +779,53 @@ TEST_F(CpuTest, dec_h_zero) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, add_hl_hl) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, add_hl_hl) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 1;
+    regs.l = 2;
+    execute_instruction(0x29);
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 2;
+    expected_regs.l = 4;
+    expected_regs.f = ICpu::Z_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
+
+TEST_F(CpuTest, add_hl_hl_half_carry) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 0x8;
+    regs.l = 0xFF;
+    execute_instruction(0x29);
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0x11;
+    expected_regs.l = 0xFE;
+    expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
+
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
+
+TEST_F(CpuTest, add_hl_hl_half_carry_and_carry) {
+    regs.f = ICpu::Z_FLAG;
+    regs.h = 0xFF;
+    regs.l = 0xFF;
+    execute_instruction(0x29);
+
+    ICpu::Registers expected_regs{};
+    expected_regs.h = 0xFF;
+    expected_regs.l = 0xFE;
+    expected_regs.f = ICpu::Z_FLAG | ICpu::H_FLAG | ICpu::C_FLAG;
+    expected_regs.pc = 1;
+    verify_state_changes(expected_regs);
+
+    EXPECT_EQ(cpu->get_cycles_executed(), 2);
+}
 
 // TEST_F(CpuTest, ldi_a_mhl) {
 //     // execute_instruction(x);

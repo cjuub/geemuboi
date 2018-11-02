@@ -593,6 +593,7 @@ int CPU::add_hl_bc() {
     add_hl_r16(regs.b, regs.c);
     return 2;
 }
+
 int CPU::ld_a_mbc() {
     uint16_t addr = (regs.b << 8) + regs.c;
     ld_r8_r8(regs.a, mmu.read_byte(addr));

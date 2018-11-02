@@ -635,6 +635,10 @@ inline void CPU::add_hl_r16(uint8_t high, uint8_t low) {
     uint32_t sum = regs.l + low;
     if (sum >= 0x100) {
         ++high;
+
+        if (!high) {
+            regs.f |= ICpu::C_FLAG | ICpu::H_FLAG;
+        }
     }
 
     regs.l += low;
