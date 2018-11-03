@@ -219,15 +219,19 @@ TEST_F(CpuTest, ld_b_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, ld_ma16_sp) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, ld_ma16_sp) {
+    regs.sp = 0xFFEE;
+    EXPECT_CALL(mmu, read_word(regs.pc + 1)).WillOnce(Return(0xCCDD));
+    EXPECT_CALL(mmu, write_word(0xCCDD, regs.sp));
+    execute_instruction(0x08);
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.sp = 0xFFEE;
+    expected_regs.pc = 3;
+    verify_state_changes(expected_regs);
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    EXPECT_EQ(cpu->get_cycles_executed(), 5);
+}
 
 TEST_F(CpuTest, add_hl_bc) {
     regs.f = ICpu::Z_FLAG;
