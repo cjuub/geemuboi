@@ -409,15 +409,15 @@ TEST_F(CpuTest, ld_c_d8) {
 //     // EXPECT_EQ(cpu->get_cycles_executed(), x);
 // }
 
-// TEST_F(CpuTest, stop) {
-//     // execute_instruction(x);
+TEST_F(CpuTest, stop) {
+    execute_instruction(0x10);
 
-//     ICpu::Registers expected_regs{};
-//     expected_regs.pc = 1;
-//     verify_state_changes(expected_regs);
+    ICpu::Registers expected_regs{};
+    expected_regs.pc = 2;
+    verify_state_changes(expected_regs);
 
-//     // EXPECT_EQ(cpu->get_cycles_executed(), x);
-// }
+    EXPECT_EQ(cpu->get_cycles_executed(), 1);
+}
 
 TEST_F(CpuTest, ld_de_d16) {
     ICpu::Registers expected_regs{};
